@@ -1,0 +1,133 @@
+"Phrases"
+{
+    "Prefix"
+    {
+		"de" "[VipMenu]"
+    }
+    
+    "Plugin_disable"
+    {
+		"de" "VipMenu ist Deaktiviert"
+    }
+
+    "Player_Death"
+    {
+		"de" "Du kannst diesen befehl als Toter nicht ausführen"
+    }
+    
+    "Wrong_team"
+    {
+		"de" "Du bist im falschen Team"
+    }
+
+    "Not_VIP"
+    {
+		"de" "Du brauchst VIP"
+    }
+    
+    "Menu_Already"
+    {
+		"de" "Du hast bereits das menu benutzt"
+    }
+    
+    "Menu_Title"
+    {
+		"de" ".::VipMenu::."
+    }
+    
+    "Menu_opened"
+    {
+		"de" "Du hast das menu geöffnet"
+    }
+    
+    "Menu_Life"
+    {
+		"de" "Mehr +HP"
+    }
+    
+    "Get_Life"
+    {
+		"de" "Du hast nun mehr HP!"
+    }
+    
+    "Menu_Armour"
+    {
+		"de" "Mehr +Rüstung"
+    }
+    
+    "Get_Armour"
+    {
+		"de" "Du hast nun mehr Rüstung"
+    }
+    
+    "Menu_Granade"
+    {
+		"de" "Nehme eine HE granate"
+    }
+    
+    "Get_Nade"
+    {
+		"de" "Du hast nun eine HE granate"
+    }
+    
+    "Menu_Smoke"
+    {
+		"de" "Nehme eine Smoke"
+    }
+    
+    "Get_Smoke"
+    {
+		"de" "Du hast nun eine Smoke"
+    }
+    
+    "Menu_Speed"
+    {
+		"de" "Mehr Bewegungsgeschwindigkheit"
+    } 
+    
+    "Get_Speed"
+    {
+		"de" "Du hast nun mehr Bewegungsgeschwindigkheit"
+    }
+    
+    "Menu_Gravity"
+    {
+		"de" "Weniger Gravity"
+    }
+    
+    "Get_Gravity"
+    {
+		"de" "Du hast nun weniger Gravity!"
+    }
+    
+    "Menu_Regen"
+    {
+		"de" "regeneration"
+    }
+    
+    "Get_Regen"
+    {
+		"de" "Du hast nun regeneration"
+    }
+    
+    "Menu_Bhop"
+    {
+		"de" "Nehme bhop"
+    }
+    
+    "Get_Bhop"
+    {
+		"de" "Du hast nun AutoBhop!"
+    }
+    
+    "Menu_Weapon"
+    {
+		"de" "Neue Waffe"
+    }
+    
+    "Get_Weapon"
+    {
+		"de" "Du hast nun eine neue Waffe"
+    }
+    
+}

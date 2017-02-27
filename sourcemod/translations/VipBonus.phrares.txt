@@ -1,0 +1,147 @@
+"Phrases"
+{
+    "Prefix"
+    {
+        "en" "[VipMenu]"
+    }
+    
+    "Menu_Title"
+    {
+        "en" ".::VipMenu::."
+    }
+    
+    "Plugin_disable"
+    {
+        "en" "VipMenu is disabled"
+    }
+
+    "Player_Death"
+    {
+        "en" "You can't to that as died"
+    }
+    
+    "Wrong_team"
+    {
+        "en" "You are in the wrong team"
+    }
+
+    "Not_VIP"
+    {
+        "en" "You need to be VIP"
+    }
+    
+    "Menu_Already"
+    {
+        "en" "You have already used the menu"
+    }
+    
+    "Menu_Title"
+    {
+        "en" ".::VipMenu::."
+    }
+    
+    "Menu_opened"
+    {
+        "en" "You opened the menu"
+    }
+    
+    "Menu_Life"
+    {
+        "en" "Get +HP"
+    }
+    
+    "Get_Life"
+    {
+        "en" "You got more HP!"
+    }
+    
+    "Menu_Armour"
+    {
+        "en" "Get +Armour"
+    }
+    
+    "Get_Armour"
+    {
+        "en" "You got more Armour!"
+    }
+    
+    "Menu_Granade"
+    {
+        "en" "Get a HE nade"
+    }
+    
+    "Get_Nade"
+    {
+        "en" "You got an HE granade"
+    }
+    
+    "Menu_Smoke"
+    {
+        "en" "Get a Smoke"
+    }
+    
+    "Get_Smoke"
+    {
+        "en" "You got a smoke"
+    }
+    
+    "Menu_Speed"
+    {
+        "en" "Get +Speed"
+    }
+    
+    "Get_Speed"
+    {
+        "en" "You got +Speed"
+    }
+    
+    "Menu_Gravity"
+    {
+        "en" "Get -Gravity"
+    }
+    
+    "Get_Gravity"
+    {
+        "en" "You got -Gravity"
+    }
+    
+    "Menu_Regen"
+    {
+        "en" "Get regeneration"
+    }
+    
+    "Get_Regen"
+    {
+        "en" "You got regeneration"
+    }
+    
+    "Menu_Bhop"
+    {
+        "en" "Get BunnyHop"
+    }
+    
+    "Get_Bhop"
+    {
+        "en" "You got Auto-BunnyHop"
+    }
+    
+    "Menu_DoubleJump"
+    {
+      "en" "Get DoubleJump"
+    }
+    
+    "Get_DoubleJump"
+    {
+      "en" "You got DoubleJump
+    }
+    "Menu_Weapon"
+    {
+        "en" "Get weapon"
+    }
+    
+    "Get_Weapon"
+    {
+        "en" "You got a weapon"
+    }
+    
+}

@@ -1,0 +1,134 @@
+"Phrases"
+{
+    "Prefix"
+    {
+
+		"fr" "[VipMenu]"
+    }
+    
+    "Plugin_disable"
+    {
+		"fr" "Le VipMenu est désactivé"
+    }
+
+    "Player_Death"
+    {
+		"fr" "Vous ne pouvez pas le faire quand vous etez mort."
+    }
+    
+    "Wrong_team"
+    {
+		"fr" "Tu es dans la mauvaise équipe."
+    }
+
+    "Not_VIP"
+    {
+		"fr" "Tu dois être VIP"
+    }
+    
+    "Menu_Already"
+    {
+		"fr" "Tu as déjà utilisé le menu"
+    }
+    
+    "Menu_Title"
+    {
+		"fr" ".::VipMenu::."
+    }
+    
+    "Menu_opened"
+    {
+		"fr" "Tu as ouvert le menu"
+    }
+    
+    "Menu_Life"
+    {
+		"fr" "Obtenir +HP"
+    }
+    
+    "Get_Life"
+    {
+		"fr" "Tu as plus d'HP"
+    }
+    
+    "Menu_Armour"
+    {
+		"fr" "Obtenir +Armure"
+    }
+    
+    "Get_Armour"
+    {
+		"fr" "Tu as plus d'armure!"
+    }
+    
+    "Menu_Granade"
+    {
+		"fr" "Obtenir une grenade"
+    }
+    
+    "Get_Nade"
+    {
+		"fr" "Tu as une grenade"
+    }
+    
+    "Menu_Smoke"
+    {
+		"fr" "Obtenir une smoke"
+    }
+    
+    "Get_Smoke"
+    {
+        "fr" "Tu as une smoke"
+    }
+    
+    "Menu_Speed"
+    {
+		"fr" "Obtenir plus de vitesse"
+    } 
+    
+    "Get_Speed"
+    {
+		"fr" "Tu es maintenant plus rapide!"
+    }
+    
+    "Menu_Gravity"
+    {
+		"fr" "Obtenir moins de gravité"
+    }
+    
+    "Get_Gravity"
+    {
+		"fr" "Tu as maintenant moins de gravité!"
+    }
+    
+    "Menu_Regen"
+    {
+		"fr" "Obtenir de la regeneration"
+    }
+    
+    "Get_Regen"
+    {
+		"fr" "Tu as obtenu de la regeneration"
+    }
+    
+    "Menu_Bhop"
+    {
+		"fr" "Obtenir le bhop"
+    }
+    
+    "Get_Bhop"
+    {
+		"fr" "Tu as maintenant de l'AutoBhop!"
+    }
+    
+    "Menu_Weapon"
+    {
+		"fr" "Obtenir une arme"
+    }
+    
+    "Get_Weapon"
+    {
+		"fr" "Tu as obtenu une arme!"
+    }
+    
+}

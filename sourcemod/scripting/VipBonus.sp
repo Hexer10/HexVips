@@ -105,7 +105,7 @@ public void OnPluginStart()
 	cv_fVipSpawnArmour = AutoExecConfig_CreateConVar("sm_VipSpawnArmour", "70", "+Armour on Spawn, 0 = disabled", 0, true, 0.0, false);
 	cv_iVipKillHp = AutoExecConfig_CreateConVar("sm_VipKillHP", "25", "+HP HP for kills, 0 = disabled", 0, true, 0.0, false);
 	//cv_iVipKillHp = AutoExecConfig_CreateConVar("sm_VipKillHeadHP", "50", "How much +HP should have Vips for head kills, 0 = disabled", 0, true, 0.0, false); //WorkInProgress
-	cv_bEnableVipMenu = AutoExecConfig_CreateConVar("sm_VipMenu", "1", "Enable VipMenu?", 0, true, 0.0, true, 1.0);
+	cv_bEnableVipMenu = AutoExecConfig_CreateConVar("sm_EnableVipMenu", "1", "Enable VipMenu?", 0, true, 0.0, true, 1.0);
 	cv_iMenuUse = AutoExecConfig_CreateConVar("sm_VipMenuUse", "1", "Max VipMenu times", 0, true, 0.0, true, 1.0); //WorkInProgress
 	cv_bMenuLife = AutoExecConfig_CreateConVar("sm_MenuLife", "1", "Enable Life > VipMenu", 0, true, 0.0, true, 1.0);
 	cv_bMenuArmour = AutoExecConfig_CreateConVar("sm_MenuArmour", "1", "Enable Armour > VipMenu", 0, true, 0.0, true, 1.0);
@@ -228,6 +228,7 @@ public void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast
 	iMenuUse[client] = 0;
 	bRegen[client] = false;
 	bBhop[client] = false;
+	bDoubleJump[client] = false;
 	if (h_Regen[client] != INVALID_HANDLE)
 	{
 		KillTimer(h_Regen[client]);

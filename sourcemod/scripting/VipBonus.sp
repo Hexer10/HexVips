@@ -1,6 +1,7 @@
  //Defines
 #include <sourcemod>
 #include <sdktools>
+#include <sdkhooks>
 #include <cstrike>
 #include <autoexecconfig>
 #include <hexstocks>
@@ -31,7 +32,7 @@
 
 #define PLUGIN_AUTHOR "Hexah"
 #define PLUGIN_VER "1.00"
-
+#define DMG_FALL   (1 << 5)
 
 //Chars
 char sFlagNeeded[32];
@@ -153,6 +154,16 @@ public void OnPluginStart()
 
 
 
+public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
+{
+	if (damagetype & DMG_FALL && CheckAdminFlag(victim, sFlagNeeded))
+	{
+		return Plugin_Handled;
+	}
+	return Plugin_Continue;
+}
+
+
 public Action Command_ResMenu(int client, int args)
 {
 	
@@ -270,7 +281,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 	
 	static bool bPressed[MAXPLAYERS + 1] = false;
 	
-	if (IsPlayerAlive(client))
+	if (IsPlayerAlive(client) && CheckAdminFlag(client, sFlagNeeded))
 	{
 		if (GetEntityFlags(client) & FL_ONGROUND)
 		{
@@ -347,6 +358,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 public void OnClientPutInServer(int client)
 {
 	CheckTag(client);
+	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 }
 
 public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast) //HP ON KILL
@@ -377,9 +389,7 @@ public void OnClientPostAdminCheck(int client)
 {
 	if (CheckAdminFlag(client, sFlagNeeded) && cv_VipJoinMessage.BoolValue)
 	{
-		char name[32];
-		GetClientName(client, name, sizeof(name));
-		CPrintToChatAll("[VIP]%N joined in the server!", name);
+		CPrintToChatAll("[VIP]%N joined in the server!", client);
 	}
 }
 
@@ -594,14 +604,12 @@ public Action Timer_Regen(Handle timer, any client) //REGENERATION TIMER
 
 public Action DelayCheck(Handle timer)
 {
-	LoopClients(client)
+	for (int i = 1; i <= MaxClients; i++) if (IsClientInGame(i))
 	{
-		if (0 < client)
 		{
-			CheckTag(client);
+			CheckTag(i);
 		}
 	}
-	return Action;
 }
 
 

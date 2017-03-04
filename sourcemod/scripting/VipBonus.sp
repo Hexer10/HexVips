@@ -77,7 +77,7 @@ ConVar cv_fVipSpawnArmour;
 ConVar cv_fHpTimer;
 ConVar cv_fSpeed;
 ConVar cv_fGravity;
-
+ConVar cv_bNoFall;
 ConVar cv_sFlagNeeded;
 ConVar cv_sWeapon;
 ConVar cv_sVipTag;
@@ -101,6 +101,7 @@ public void OnPluginStart()
 	AutoExecConfig_SetCreateFile(true);
 	cv_sFlagNeeded = AutoExecConfig_CreateConVar("sm_VipFlag", "a", "Flag needed to be VIP");
 	cv_VipJoinMessage = AutoExecConfig_CreateConVar("sm_VipJoinMessage", "1", "Enable join messages");
+	cv_bNoFall = AutoExecConfig_CreateConVar("sm_EnalbeNoFallDamge", "1", "Enable NoFallDamge");
 	cv_sVipTag = AutoExecConfig_CreateConVar("sm_VipTag", "[VIP]", "Clan Tag for Vips, none = disabled");
 	cv_iVipSpawnHP = AutoExecConfig_CreateConVar("sm_VipSpawnHP", "70", "+HP on Spawn, 0 = disabled", 0, true, 0.0, false);
 	cv_fVipSpawnArmour = AutoExecConfig_CreateConVar("sm_VipSpawnArmour", "70", "+Armour on Spawn, 0 = disabled", 0, true, 0.0, false);
@@ -156,7 +157,7 @@ public void OnPluginStart()
 
 public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
-	if (damagetype & DMG_FALL && CheckAdminFlag(victim, sFlagNeeded))
+	if (damagetype & DMG_FALL && CheckAdminFlag(victim, sFlagNeeded) && cv_bNoFall.BoolValue)
 	{
 		return Plugin_Handled;
 	}

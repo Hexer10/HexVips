@@ -434,7 +434,12 @@ void CheckTag(int client) //HANDLE TAG
 			char sOldTag[16];
 			char sNewTag[32];
 			CS_GetClientClanTag(client, sOldTag, sizeof(sOldTag));
-			Format(sNewTag, sizeof(sNewTag), "%s %s", sVipTag, sNewTag);
+			if (!StrContains(sOldTag, "Vip", false))
+			{
+				Format(sNewTag, sizeof(sNewTag), "%s %s", sVipTag, sNewTag);
+				CS_SetClientClanTag(client, sNewTag);
+			}
+			
 		}
 	}
 }

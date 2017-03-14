@@ -1,4 +1,4 @@
-//Defines
+ //Defines
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
@@ -31,7 +31,7 @@
 #define DEBUG
 
 #define PLUGIN_AUTHOR "Hexah"
-#define PLUGIN_VER "Alpha 1.20"
+#define PLUGIN_VER "1.00"
 #define DMG_FALL   (1 << 5)
 
 //Chars
@@ -65,6 +65,7 @@ ConVar cv_bDisableLR;
 ConVar cv_DisableOnEventday;
 ConVar cv_VipJoinMessage;
 ConVar cv_bMenuCustomNade;
+ConVar cv_bVipTag;
 //ConVars int
 ConVar cv_iVipSpawnHP;
 ConVar cv_iRegenMaxHP;
@@ -118,7 +119,8 @@ public void OnPluginStart()
 	AutoExecConfig_SetCreateFile(true);
 	cv_sFlagNeeded = AutoExecConfig_CreateConVar("sm_VipFlag", "a", "Flag needed to be VIP");
 	cv_VipJoinMessage = AutoExecConfig_CreateConVar("sm_VipJoinMessage", "1", "Enable join messages");
-	cv_bNoFall = AutoExecConfig_CreateConVar("sm_EnalbeNoFallDamge", "1", "Enable NoFallDamge");
+	cv_bNoFall = AutoExecConfig_CreateConVar("sm_EnableNoFallDamge", "1", "Enable NoFallDamge");
+	cv_bVipTag = AutoExecConfig_CreateConVar("sm_TagOverride", "1", "0 = Place the tag previus the old one, 1 = Override the old tag");
 	cv_sVipTag = AutoExecConfig_CreateConVar("sm_VipTag", "[VIP]", "Clan Tag for Vips, none = disabled");
 	cv_iVipSpawnHP = AutoExecConfig_CreateConVar("sm_VipSpawnHP", "70", "+HP on Spawn, 0 = disabled", 0, true, 0.0, false);
 	cv_fVipSpawnArmour = AutoExecConfig_CreateConVar("sm_VipSpawnArmour", "70", "+Armour on Spawn, 0 = disabled", 0, true, 0.0, false);
@@ -424,7 +426,17 @@ void CheckTag(int client) //HANDLE TAG
 	char sVipTag[32];
 	cv_sVipTag.GetString(sVipTag, sizeof(sVipTag));
 	if (CheckAdminFlag(client, sFlagNeeded) && !StrEqual(sVipTag, "none", false))
-		CS_SetClientClanTag(client, sVipTag);
+	{
+		if (cv_bVipTag.BoolValue)
+			CS_SetClientClanTag(client, sVipTag);
+		else if (!cv_bVipTag.BoolValue)
+		{
+			char sOldTag[16];
+			char sNewTag[32];
+			CS_GetClientClanTag(client, sOldTag, sizeof(sOldTag));
+			Format(sNewTag, sizeof(sNewTag), "%s %s", sVipTag, sNewTag);
+		}
+	}
 }
 
 public void OnClientPostAdminCheck(int client)

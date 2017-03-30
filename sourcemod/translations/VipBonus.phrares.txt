@@ -153,4 +153,22 @@
     {
         "en" "You got some nades"
     }
+    
+    "Reset_Usage"
+    {
+        #format {1:n}
+        "en" "Your usages was resetted by {1}"
+    }
+    
+    "Reset_Usage_of"
+    {
+        #format {1:n}
+        "en" "You resetted usages of {1}"
+    }
+    
+    "Vip_Joined"
+    {
+        #format "{1:n}"
+        "en" "[VIP]{1} joined in the server!"
+    }
 }

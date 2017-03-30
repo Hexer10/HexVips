@@ -31,13 +31,14 @@
 #define DEBUG
 
 #define PLUGIN_AUTHOR "Hexah"
-#define PLUGIN_VER "1.00"
+#define PLUGIN_VER "2.00"
 #define DMG_FALL   (1 << 5)
 
-//Chars
+//String
 char sFlagNeeded[32];
 char sWeapon[32];
 char sMenuName[32];
+
 //Bools
 bool bRegen[MAXPLAYERS + 1] = false;
 bool bBhop[MAXPLAYERS + 1] = false;
@@ -64,6 +65,9 @@ ConVar cv_bStopTimer;
 ConVar cv_bDisableLR;
 ConVar cv_DisableOnEventday;
 ConVar cv_VipJoinMessage;
+ConVar cv_bMenuCustomNade;
+ConVar cv_bVipTag;
+ConVar cv_bNoFall;
 //ConVars int
 ConVar cv_iVipSpawnHP;
 ConVar cv_iRegenMaxHP;
@@ -71,13 +75,30 @@ ConVar cv_iRegenHP;
 ConVar cv_iLifeHP;
 ConVar cv_iArmour;
 ConVar cv_iVipKillHp;
+ConVar cv_iVipKillHpHead;
 ConVar cv_iMenuUse;
+ConVar cv_iLifeTeam;
+ConVar cv_iArmourTeam;
+ConVar cv_iGravityTeam;
+ConVar cv_iSpeedTeam;
+ConVar cv_iNadeTeam;
+ConVar cv_iSmokeTeam;
+ConVar cv_iRegenTeam;
+ConVar cv_iBhopTeam;
+ConVar cv_iDoubleTeam;
+ConVar cv_iWeapTeam;
+ConVar cv_iNadeMolotov;
+ConVar cv_iNadeSmoke;
+ConVar cv_iNadeFlashbang;
+ConVar cv_iNadeHE;
+ConVar cv_iCustomNadeTeam;
 //ConVars float
 ConVar cv_fVipSpawnArmour;
 ConVar cv_fHpTimer;
 ConVar cv_fSpeed;
 ConVar cv_fGravity;
-ConVar cv_bNoFall;
+//ConVar String
+ConVar cv_sVipMenuComm;
 ConVar cv_sFlagNeeded;
 ConVar cv_sWeapon;
 ConVar cv_sVipTag;
@@ -91,30 +112,38 @@ public Plugin myinfo =
 	url = "sourcemod.net"
 };
 
+/********************************************************************************************************************************
+                                                              START UP
+                                                              
+*********************************************************************************************************************************/
 
-//Start
+
 public void OnPluginStart()
 {
 	LoadTranslations("VipBonus.phrares");
+	LoadTranslations("common.phrares");
 	//Convars
 	AutoExecConfig_SetFile("VipBonus");
 	AutoExecConfig_SetCreateFile(true);
 	cv_sFlagNeeded = AutoExecConfig_CreateConVar("sm_VipFlag", "a", "Flag needed to be VIP");
+	cv_sVipMenuComm = AutoExecConfig_CreateConVar("sm_VipMenuCommand", "vipmenu", "Commands to open the Vipmenu (no need of sm_ or ! or /)(separeted by a comma ',')");
 	cv_VipJoinMessage = AutoExecConfig_CreateConVar("sm_VipJoinMessage", "1", "Enable join messages");
-	cv_bNoFall = AutoExecConfig_CreateConVar("sm_EnalbeNoFallDamge", "1", "Enable NoFallDamge");
+	cv_bNoFall = AutoExecConfig_CreateConVar("sm_EnableNoFallDamge", "1", "Enable NoFallDamge");
 	cv_sVipTag = AutoExecConfig_CreateConVar("sm_VipTag", "[VIP]", "Clan Tag for Vips, none = disabled");
+	cv_bVipTag = AutoExecConfig_CreateConVar("sm_TagOverride", "1", "0 = Place the tag previus the old one, 1 = Override the old tag");
 	cv_iVipSpawnHP = AutoExecConfig_CreateConVar("sm_VipSpawnHP", "70", "+HP on Spawn, 0 = disabled", 0, true, 0.0, false);
 	cv_fVipSpawnArmour = AutoExecConfig_CreateConVar("sm_VipSpawnArmour", "70", "+Armour on Spawn, 0 = disabled", 0, true, 0.0, false);
 	cv_iVipKillHp = AutoExecConfig_CreateConVar("sm_VipKillHP", "25", "+HP HP for kills, 0 = disabled", 0, true, 0.0, false);
-	//cv_iVipKillHp = AutoExecConfig_CreateConVar("sm_VipKillHeadHP", "50", "How much +HP should have Vips for head kills, 0 = disabled", 0, true, 0.0, false); //WorkInProgress
+	cv_iVipKillHpHead = AutoExecConfig_CreateConVar("sm_VipKillHeadHP", "50", "How much +HP should have Vips for head kills, 0 = disabled", 0, true, 0.0, false);
 	cv_bEnableVipMenu = AutoExecConfig_CreateConVar("sm_EnableVipMenu", "1", "Enable VipMenu?", 0, true, 0.0, true, 1.0);
-	cv_iMenuUse = AutoExecConfig_CreateConVar("sm_VipMenuUse", "1", "Max VipMenu times", 0, true, 0.0, true, 1.0); //WorkInProgress
+	cv_iMenuUse = AutoExecConfig_CreateConVar("sm_VipMenuUse", "1", "Max VipMenu times", 0, true, 0.0, true, 1.0);
 	cv_bMenuLife = AutoExecConfig_CreateConVar("sm_MenuLife", "1", "Enable Life > VipMenu", 0, true, 0.0, true, 1.0);
 	cv_bMenuArmour = AutoExecConfig_CreateConVar("sm_MenuArmour", "1", "Enable Armour > VipMenu", 0, true, 0.0, true, 1.0);
 	cv_bMenuGravity = AutoExecConfig_CreateConVar("sm_MenuGravity", "1", "Enable Gravity > VipMenu", 0, true, 0.0, true, 1.0);
 	cv_bMenuSpeed = AutoExecConfig_CreateConVar("sm_MenuSpeed", "1", "Enable Speed > VipMenu", 0, true, 0.0, true, 1.0);
 	cv_bMenuNade = AutoExecConfig_CreateConVar("sm_MenuNade", "1", "Enable HE Nade > VipMenu", 0, true, 0.0, true, 1.0);
 	cv_bMenuSmoke = AutoExecConfig_CreateConVar("sm_MenuSmoke", "1", "Enable Smoke > VipMenu", 0, true, 0.0, true, 1.0);
+	cv_bMenuCustomNade = AutoExecConfig_CreateConVar("sm_MenuCustomNade", "1", "Enable CustomNade > VipMenu", 0, true, 0.0, true, 1.0);
 	cv_bMenuRegen = AutoExecConfig_CreateConVar("sm_MenuRegen", "1", "Enable Regen > VipMenu", 0, true, 0.0, true, 1.0);
 	cv_bMenuBhop = AutoExecConfig_CreateConVar("sm_MenuBhop", "1", "Enable BunnyHop > VipMenu", 0, true, 0.0, true, 1.0);
 	cv_bMenuDobleJump = AutoExecConfig_CreateConVar("sm_MenuDoubleJump", "1", "Enable DoubleJump > VipMenu", 0, true, 0.0, true, 1.0);
@@ -127,6 +156,21 @@ public void OnPluginStart()
 	cv_fHpTimer = AutoExecConfig_CreateConVar("sm_RegenInt", "1.0", "Regen interval");
 	cv_iRegenHP = AutoExecConfig_CreateConVar("sm_HpRegen", "10", "+HP for Regen");
 	cv_bStopTimer = AutoExecConfig_CreateConVar("sm_RegenStop", "0", "Stop Regen when reached the MaxHP (0) or continue when get lower (1)?", 0, true, 0.0, true, 1.0);
+	cv_iLifeTeam = AutoExecConfig_CreateConVar("sm_MenuLifeTeam", "3", "Team for use Life? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
+	cv_iArmourTeam = AutoExecConfig_CreateConVar("sm_MenuArmourTeam", "3", "Team for use Armour? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
+	cv_iGravityTeam = AutoExecConfig_CreateConVar("sm_MenuGravityTeam", "3", "Team for use Gravity? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
+	cv_iSpeedTeam = AutoExecConfig_CreateConVar("sm_MenuSpeedTeam", "3", "Team for use Speed? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
+	cv_iNadeTeam = AutoExecConfig_CreateConVar("sm_MenuNadeTeam", "3", "Team for use Nade? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
+	cv_iSmokeTeam = AutoExecConfig_CreateConVar("sm_MenuSmokeTeam", "3", "Team for use Smoke? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
+	cv_iCustomNadeTeam = AutoExecConfig_CreateConVar("sm_MenuSmokeTeam", "3", "Team for use CustomNades? 1 = T 2 = CT 3 = BOTH", 0, true, 1.0, true, 3.0);
+	cv_iBhopTeam = AutoExecConfig_CreateConVar("sm_MenuBhopTeam", "3", "Team for use Bhop? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
+	cv_iDoubleTeam = AutoExecConfig_CreateConVar("sm_MenuDoubleTeam", "3", "Team for use DoubleJump? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
+	cv_iRegenTeam = AutoExecConfig_CreateConVar("sm_MenuRegenTeam", "3", "Team for use Regen? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
+	cv_iWeapTeam = AutoExecConfig_CreateConVar("sm_MenuWeaponTeam", "3", "Team for use CustomWeapon? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
+	cv_iNadeMolotov = AutoExecConfig_CreateConVar("sm_NadeMolotovs", "1", "Quantity of molotov > CustomNade", 0, true, 0.0, true, 10.0);
+	cv_iNadeFlashbang = AutoExecConfig_CreateConVar("sm_NadeFlashbangs", "1", "Quantity of molotov > CustomNade", 0, true, 0.0, true, 10.0);
+	cv_iNadeHE = AutoExecConfig_CreateConVar("sm_NadeHE", "1", "Quantity of HE > CustomNade", 0, true, 0.0, true, 10.0);
+	cv_iNadeSmoke = AutoExecConfig_CreateConVar("sm_NadeSmoke", "1", "Quantity of smokes > CustomNade", 0, true, 0.0, true, 10.0);
 	cv_bDisableLR = AutoExecConfig_CreateConVar("sm_DisableVipLR", "1", "Disable VipMenu > LR", 0, true, 0.0, true, 1.0);
 	cv_DisableOnEventday = AutoExecConfig_CreateConVar("sm_DisableVipEvent", "1", "Disable VipMenu > MYJB EventDay", 0, true, 0.0, true, 1.0);
 	AutoExecConfig_ExecuteFile();
@@ -143,9 +187,32 @@ public void OnPluginStart()
 	HookEvent("player_spawn", Event_CheckTag);
 	HookEvent("player_death", Event_CheckTag);
 	HookEvent("round_start", Event_CheckTag);
+	
 	//Misc
 	cv_sFlagNeeded.GetString(sFlagNeeded, sizeof(sFlagNeeded));
 	cv_sWeapon.GetString(sWeapon, sizeof(sWeapon));
+	
+	
+	
+}
+
+public void OnConfigsExecuted()
+{
+	//Custom Comm (thx to shanapu)
+	int iCount = 0;
+	char sCommands[128], sCommandsL[12][32], sCommand[32];
+	cv_sVipMenuComm.GetString(sCommands, sizeof(sCommands));
+	ReplaceString(sCommands, sizeof(sCommands), " ", "");
+	iCount = ExplodeString(sCommands, ",", sCommandsL, sizeof(sCommandsL), sizeof(sCommandsL[]));
+	
+	for (int i = 0; i < iCount; i++)
+	{
+		Format(sCommand, sizeof(sCommand), "sm_%s", sCommandsL[i]);
+		if (GetCommandFlags(sCommand) == INVALID_FCVAR_FLAGS) // if command not already exist
+		{
+			RegConsoleCmd(sCommand, Command_VipMenu, "Allows the Admin or Warden to set catch as next round");
+		}
+	}
 	
 }
 /********************************************************************************************************************************
@@ -167,7 +234,11 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 
 public Action Command_ResMenu(int client, int args)
 {
-	
+	if (args == 0)
+	{
+		CReplyToCommand(client, "Usage: !resetvipmenu < client/target > < 1 = silent >");
+		return Plugin_Handled;
+	}
 	char arg1[32];
 	GetCmdArg(1, arg1, sizeof(arg1));
 	char target_name[MAX_TARGET_LENGTH];
@@ -184,11 +255,18 @@ public Action Command_ResMenu(int client, int args)
 				sizeof(target_name), 
 				tn_is_ml)) <= 0)
 	{
-		/* This function replies to the admin with a failure message */
-		ReplyToTargetError(client, target_count);
+		CReplyToCommand(client, "Target not valid");
 	}
+	
+	int iSilent = GetCmdArgInt(3);
 	for (int i = 0; i < target_count; i++)
 	{
+		if (iSilent != 1)
+		{
+			CPrintToChat(target_list[i], "%t", "Reseted_Usage", client);
+			CReplyToCommand(client, "%t", "Reseted_Usage_Of", target_list[i]);
+		}
+		
 		iMenuUse[target_list[i]] = 0;
 		bRegen[target_list[i]] = false;
 		bBhop[target_list[i]] = false;
@@ -260,11 +338,16 @@ public void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast
 		}
 		if (cv_iVipSpawnHP.IntValue >= 1 || cv_fVipSpawnArmour.IntValue >= 1)
 		{
-			SetEntProp(client, Prop_Send, "m_ArmorValue", cv_fVipSpawnArmour.IntValue);
-			int i_SpawnHealth = GetClientHealth(client);
-			SetEntityHealth(client, i_SpawnHealth + cv_iVipSpawnHP.IntValue);
+			CreateTimer(3.7, tDelayLife, client, TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
+}
+
+public Action tDelayLife(Handle timer, any client)
+{
+	SetEntProp(client, Prop_Send, "m_ArmorValue", cv_fVipSpawnArmour.IntValue);
+	int i_SpawnHealth = GetClientHealth(client);
+	SetEntityHealth(client, i_SpawnHealth + cv_iVipSpawnHP.IntValue);
 }
 
 public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast) //RESET BOOLS ON ROUNDSTART AFTER EVENTDAY
@@ -282,7 +365,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 	
 	static bool bPressed[MAXPLAYERS + 1] = false;
 	
-	if (IsPlayerAlive(client) && CheckAdminFlag(client, sFlagNeeded))
+	if (IsPlayerAlive(client))
 	{
 		if (GetEntityFlags(client) & FL_ONGROUND)
 		{
@@ -302,9 +385,8 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 					}
 				}
 				
-				if (!bDoubleJump[client])return Plugin_Continue;
 				
-				if (!bPressed[client] && iDJumped[client]++ == 1)
+				if (!bPressed[client] && iDJumped[client]++ == 1 && bDoubleJump[client])
 				{
 					float velocity[3];
 					float velocity0;
@@ -366,10 +448,16 @@ public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
 {
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
-	if (CheckAdminFlag(client, sFlagNeeded) && client == attacker && cv_iVipKillHp.IntValue >= 1)
+	bool headshot = GetEventBool(event, "headshot");
+	if (CheckAdminFlag(client, sFlagNeeded) && client == attacker && cv_iVipKillHp.IntValue >= 1 && !headshot)
 	{
 		int iHealth = GetClientHealth(attacker);
 		SetEntityHealth(attacker, cv_iVipKillHp.IntValue + iHealth);
+	}
+	if (CheckAdminFlag(client, sFlagNeeded) && client == attacker && cv_iVipKillHp.IntValue >= 1 && headshot)
+	{
+		int iHealth = GetClientHealth(attacker);
+		SetEntityHealth(attacker, cv_iVipKillHpHead.IntValue + iHealth);
 	}
 }
 
@@ -383,7 +471,17 @@ void CheckTag(int client) //HANDLE TAG
 	char sVipTag[32];
 	cv_sVipTag.GetString(sVipTag, sizeof(sVipTag));
 	if (CheckAdminFlag(client, sFlagNeeded) && !StrEqual(sVipTag, "none", false))
-		CS_SetClientClanTag(client, sVipTag);
+	{
+		if (cv_bVipTag.BoolValue)
+			CS_SetClientClanTag(client, sVipTag);
+		else if (!cv_bVipTag.BoolValue)
+		{
+			char sOldTag[16];
+			char sNewTag[32];
+			CS_GetClientClanTag(client, sOldTag, sizeof(sOldTag));
+			Format(sNewTag, sizeof(sNewTag), "%s %s", sVipTag, sNewTag);
+		}
+	}
 }
 
 public void OnClientPostAdminCheck(int client)
@@ -398,7 +496,7 @@ public void OnAvailableLR(int Announced) //DISABLE ITEMS ON LASTREQEST
 {
 	if (cv_bDisableLR.BoolValue)
 	{
-		LoopClients(client)
+		for (int client = 0; client <= MaxClients; client++)
 		{
 			if (IsPlayerAlive(client))
 			{
@@ -438,49 +536,51 @@ void vmenu(int client) //MENU
 	
 	Format(sMenuName, sizeof(sMenuName), "%t", "Menu_Title");
 	menu.SetTitle(sMenuName);
-	if (cv_bMenuLife.BoolValue)
+	if (cv_bMenuLife.BoolValue && IsValidTeam(client, cv_iLifeTeam.IntValue))
 	{
-		//menu.AddItem("Life", "+HP");
 		AddMenuItemFormat(menu, "Life", ITEMDRAW_DEFAULT, "%t", "Menu_Life");
 		
 	}
-	if (cv_bMenuArmour.BoolValue)
+	if (cv_bMenuArmour.BoolValue && IsValidTeam(client, cv_iArmourTeam.IntValue))
 	{
 		AddMenuItemFormat(menu, "Armour", ITEMDRAW_DEFAULT, "%t", "Menu_Armour");
 	}
-	if (cv_bMenuNade.BoolValue)
+	if (cv_bMenuNade.BoolValue && IsValidTeam(client, cv_iNadeTeam.IntValue))
 	{
 		AddMenuItemFormat(menu, "Nade", ITEMDRAW_DEFAULT, "%t", "Menu_Granade");
 	}
-	if (cv_bMenuSmoke.BoolValue)
+	if (cv_bMenuSmoke.BoolValue && IsValidTeam(client, cv_iSmokeTeam.IntValue))
 	{
 		AddMenuItemFormat(menu, "Smoke", ITEMDRAW_DEFAULT, "%t", "Menu_Smoke");
 	}
-	if (cv_bMenuSpeed.BoolValue)
+	if (cv_bMenuCustomNade.BoolValue && IsValidTeam(client, cv_iCustomNadeTeam.IntValue))
+	{
+		AddMenuItemFormat(menu, "CustomNade", ITEMDRAW_DEFAULT, "%t", "Menu_CustomNade");
+	}
+	if (cv_bMenuSpeed.BoolValue && IsValidTeam(client, cv_iSpeedTeam.IntValue))
 	{
 		AddMenuItemFormat(menu, "Speed", ITEMDRAW_DEFAULT, "%t", "Menu_Speed");
-		
 	}
-	if (cv_bMenuGravity.BoolValue)
+	if (cv_bMenuGravity.BoolValue && IsValidTeam(client, cv_iGravityTeam.IntValue))
 	{
 		AddMenuItemFormat(menu, "Gravity", ITEMDRAW_DEFAULT, "%t", "Menu_Gravity");
 	}
-	if (cv_bMenuRegen.BoolValue)
+	if (cv_bMenuRegen.BoolValue && IsValidTeam(client, cv_iRegenTeam.IntValue))
 	{
 		AddMenuItemFormat(menu, "Regen", ITEMDRAW_DEFAULT, "%t", "Menu_Regen");
 	}
 	
-	if (cv_bMenuBhop.BoolValue)
+	if (cv_bMenuBhop.BoolValue && IsValidTeam(client, cv_iBhopTeam.IntValue))
 	{
 		AddMenuItemFormat(menu, "Bhop", ITEMDRAW_DEFAULT, "%t", "Menu_Bhop");
 	}
 	
-	if (cv_bMenuDobleJump.BoolValue)
+	if (cv_bMenuDobleJump.BoolValue && IsValidTeam(client, cv_iDoubleTeam.IntValue))
 	{
 		AddMenuItemFormat(menu, "Double", ITEMDRAW_DEFAULT, "%t", "Menu_DoubleJump");
 	}
 	
-	if (StrEqual(sWeapon, "none", false))
+	if (!StrEqual(sWeapon, "none", false) && IsValidTeam(client, cv_iWeapTeam.IntValue))
 	{
 		AddMenuItemFormat(menu, "Weap", ITEMDRAW_DEFAULT, "%t", "Menu_Weapon");
 	}
@@ -554,6 +654,27 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 			iMenuUse[client]++;
 		}
 		
+		else if (strcmp(info, "CustomNade") == 0)
+		{
+			iMenuUse[client]++;
+			if (cv_iNadeMolotov.IntValue != 0)
+			{
+				GivePlayerWeaponAndAmmo(client, "weapon_molotov", 1, cv_iNadeMolotov.IntValue);
+			}
+			if (cv_iNadeFlashbang.IntValue != 0)
+			{
+				GivePlayerWeaponAndAmmo(client, "weapon_flashbang", 1, cv_iNadeFlashbang.IntValue);
+			}
+			if (cv_iNadeHE.IntValue != 0)
+			{
+				GivePlayerWeaponAndAmmo(client, "weapon_hegrenade", 1, cv_iNadeHE.IntValue);
+			}
+			if (cv_iNadeSmoke.IntValue != 0)
+			{
+				GivePlayerWeaponAndAmmo(client, "weapon_smokegrenade", 1, cv_iNadeSmoke.IntValue);
+			}
+		}
+		
 		else if (strcmp(info, "Weap") == 0)
 		{
 			iMenuUse[client]++;
@@ -605,7 +726,7 @@ public Action Timer_Regen(Handle timer, any client) //REGENERATION TIMER
 
 public Action DelayCheck(Handle timer)
 {
-	for (int i = 1; i <= MaxClients; i++) if (IsClientInGame(i))
+	for (int i = 1; i <= MaxClients; i++)if (IsClientInGame(i))
 	{
 		{
 			CheckTag(i);
@@ -626,4 +747,25 @@ stock bool IsValidClientVip(int client) //IS VALID CLIENT
 		return false;
 	}
 	return true;
+}
+
+
+stock bool IsValidTeam(int client, int convar)
+{
+	if (convar == 3)
+	{
+		return true;
+	}
+	else if (GetClientTeam(client) == CS_TEAM_CT && convar == 2)
+	{
+		return true;
+	}
+	else if (GetClientTeam(client) == CS_TEAM_T && convar == 1)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 } 

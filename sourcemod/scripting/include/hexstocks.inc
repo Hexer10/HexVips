@@ -15,9 +15,22 @@ INCLUDE MERGE OF MYSTOCKS(shanpu)teamgames-stocks/menu-stocks(KissLick) & some o
 #define LoopValidClients(%1,%2,%3) for (int %1 = 1; %1 <= MaxClients; %1++) if (IsValidClient(%1,%2,%3))
 
 
+stock bool IsEven(int num)
+{
+    return (num & 1) == 0;
+}
+
+stock bool IsOdd(int num)
+{
+    return (num & 1) == 1;
+}  
 
 
-
+stock void StopTimer(Handle TimerHandle)
+{
+	KillTimer(TimerHandle);
+	TimerHandle = INVALID_HANDLE;
+}
 
 //Reset Render Color
 stock void ResetRenderColor(int client)
@@ -144,10 +157,10 @@ stock bool:AddMenuItemFormat(&Handle:menu, const String:info[], style = ITEMDRAW
 //Get Target
 stock int GetTarget(int client, int argnum)
 {
-	char arg1[32];
+	char starget[32];
 	
-	GetCmdArg(argnum, arg1, sizeof(arg1));
-	int target = FindTarget(client, arg1);
+	GetCmdArg(argnum, starget, sizeof(starget));
+	int target = FindTarget(client, starget);
 	
 	
 	if (target == -1)
@@ -164,18 +177,27 @@ stock int GetTarget(int client, int argnum)
 
 stock GetCmdArgInt(argnum)
 {
-	decl String:value[256];
+	char value[256];
 	GetCmdArg(argnum, value, sizeof(value));
 	return StringToInt(value);
 }
 
 stock GetCmdArgFloat(argnum)
 {
-	decl String:value[256];
+	char value[256];
 	GetCmdArg(argnum, value, sizeof(value));
 	return StringToFloat(value);
 }
 
+stock int GivePlayerItemRemove(int client, int weapon, int slot)
+{
+		if ((weapon = GetPlayerWeaponSlot(client, slot)) != -1)
+		{
+			RemovePlayerItem(client, weapon);
+			AcceptEntityInput(weapon, "Kill");
+		}
+		GivePlayerItem(client, weapon);
+}
 
 //Give player Iteam w/ Ammo
 stock int GivePlayerWeaponAndAmmo(int client, const char[] weapon, int clip = -1, int ammo = -1)
@@ -261,4 +283,30 @@ public void SetEntityArmour(int entity, float armour)
 public int GetEntityArmour(int entity)
 {
 	return GetEntProp(entity, Prop_Data, "m_ArmorValue");
-} 
+}
+
+
+/**
+ * Checks if string str starts with subString. Forked from smlib
+ *
+ *
+ * @param str				String to check
+ * @param subString			Sub-String to check in str
+ * @return					True if str starts with subString, false otherwise.
+ */
+stock bool String_StartsWith(const char[] str, const char[] subString)
+{
+	int n = 0;
+	while (subString[n] != '\0') {
+		
+		if (str[n] == '\0' || str[n] != subString[n]) {
+			return false;
+		}
+		
+		n++;
+	}
+	
+	return true;
+}
+
+

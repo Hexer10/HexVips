@@ -132,7 +132,7 @@
     
     "Get_DoubleJump"
     {
-      "en" "You got DoubleJump
+  "en" "You got DoubleJump"
     }
     "Menu_Weapon"
     {

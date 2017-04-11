@@ -210,7 +210,7 @@ public void OnConfigsExecuted()
 		Format(sCommand, sizeof(sCommand), "sm_%s", sCommandsL[i]);
 		if (GetCommandFlags(sCommand) == INVALID_FCVAR_FLAGS) // if command not already exist
 		{
-			RegConsoleCmd(sCommand, Command_VipMenu, "Allows the Admin or Warden to set catch as next round");
+			RegConsoleCmd(sCommand, Command_VipMenu, "Open VipMenu for VIPs");
 		}
 	}
 	

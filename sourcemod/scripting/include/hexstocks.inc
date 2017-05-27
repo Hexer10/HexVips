@@ -70,6 +70,11 @@ stock int GetTarget(int client, int argnum)
 	return target;
 }
 
+stock int GetEventClient(Event event)
+{
+	return GetClientOfUserId(event.GetInt("userid"));
+}
+
 
 /** 
  * Changes a client's name
@@ -118,7 +123,7 @@ stock void CS_SetClientName(int client, const char[] name, bool silent = false)
 /** 
  * Get alive player count of a team
  *
- * @param client			Team
+ * @param team			Team
  * @return					Team Count
  */
 stock int GetAliveTeamCount(int team)
@@ -135,41 +140,25 @@ stock int GetAliveTeamCount(int team)
  * Get random alive & non-rebeling player of a team
  *
  *
- * @param team				Team
+ * @param team				Team, -1 for any
+ * @param True				True to include only alive players.
  * @noreturn
  */
-stock int GetRandomPlayer(int team)
+stock int GetRandomPlayer(int team = -1, bool OnlyAlive = true)
 {
 	int[] clients = new int[MaxClients];
 	int clientCount;
-	LoopClients(i)
+	for (int i = 1; i <= MaxClients; i++)
 	{
-		if ((GetClientTeam(i) == team) && IsPlayerAlive(i) && !IsClientRebel(i))
+		if (IsClientInGame(i) && (team == -1 || GetClientTeam(i) == team) && (!OnlyAlive || !IsPlayerAlive(i)))
 		{
 			clients[clientCount++] = i;
 		}
 	}
 	return (clientCount == 0) ? -1 : clients[GetRandomInt(0, clientCount - 1)];
+	
 }
 
-/**
- * Get a alive random player of all teams
- *
- * @return					Client Index
- */
-stock int GetRandomAlivePlayer()
-{
-	int[] clients = new int[MaxClients];
-	int clientCount;
-	LoopClients(i)
-	{
-		if (IsPlayerAlive(i))
-		{
-			clients[clientCount++] = i;
-		}
-	}
-	return (clientCount == 0) ? -1 : clients[GetRandomInt(0, clientCount - 1)];
-}
 
 
 /*********************************** NUMBERS *****************************/
@@ -468,10 +457,11 @@ public int GetEntityArmour(int entity)
  * @param TimerHandler		Handle of the timer
  * @noreturn
  */
-stock void StopTimer(Handle &TimerHandle)
+stock void StopTimer(Handle TimerHandle)
 {
-	KillTimer(&TimerHandle);
-	&TimerHandle = INVALID_HANDLE;
+	KillTimer(TimerHandle);
+	if (TimerHandle != INVALID_HANDLE)
+		TimerHandle = INVALID_HANDLE;
 }
 
 /** Reset client Render Color
@@ -506,3 +496,34 @@ stock bool AddMenuItemFormat(Handle menu, const char[] info, int style = ITEMDRA
 	
 	return AddMenuItem(menu, info, display, style);
 }
+
+/** Prints a message to a specific client in the hud area
+ * @param client			Client Index.
+ * @param message			Message to send
+ * @param holdtime			Number of seconds to hold the text.
+ * @param x					x coordinatates from 0 to 1.	-1 is the center.
+ * @param y					y coordinatates from 0 to 1.	-1 is the center.
+ * @param red				Red color value
+ * @param green				Green color value
+ * @param blue				Blue color value
+ * @param alpha				Alpha transparency value
+ * @param fadeIn			Number of seconds to spedd fadingIn
+ * @param fadeOut			Number of seconds to spend fadingOut
+ * @param channel		A channel number.
+ *						If -1, then a channel will automatically be selected 
+ *						based on the least-recently-used channel.  If the 
+ *						channel is any other number, it will be modulo'd with 
+ *						the channel count to get a final channel number.
+ * @param fxtime			Duration of the choosen effect(may not apply on all effects)
+ * @param effect 		0/1 causes the text to fade in and fade out.
+ *						2 causes the text to flash[?].		
+ * @param ...
+ *
+ *
+ */
+stock int PrintToHud(int client, const char[] message, float holdtime = 5.0, float x, float y, int red = 255, int green = 255, int blue = 255, int alpha, float fadeIn = 0.2, float fadeOut = 0.1, int channel = -1, float fxTime = 6.0, int effect = 0)
+{
+	SetHudTextParams(x, y, holdtime, red, green, blue, alpha, 0, fxTime, fadeIn, fadeOut);
+	return ShowHudText(client, channel, message);
+}
+

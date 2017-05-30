@@ -46,7 +46,7 @@ stock bool IsValidClient(int client, bool AllowBots = false, bool AllowDead = fa
  */
 stock bool CheckAdminFlag(int client, const char[] flags)
 {
-	if ((GetUserFlagBits(client) & ReadFlagString(flags) == ReadFlagString(flags)) || (GetUserFlagBits(client) & ADMFLAG_ROOT) || StrEqual(flags, "none"))
+	if ((GetUserFlagBits(client) & ReadFlagString(flags) == ReadFlagString(flags)) || (GetUserFlagBits(client) & ADMFLAG_ROOT))
 	{
 		return true;
 	}
@@ -58,16 +58,21 @@ stock bool CheckAdminFlag(int client, const char[] flags)
  *
  * @param client			Client Index
  * @param argnum			Number of the arg
- * @return					Client Index or -1 on failure.
+ * @return					True on success, false on failure.
  */
 stock int GetTarget(int client, int argnum)
 {
 	char starget[32];
 	
 	GetCmdArg(argnum, starget, sizeof(starget));
-	return target = FindTarget(client, starget);
+	int target = FindTarget(client, starget);
 	
-	
+	return target;
+}
+
+stock int GetEventClient(Event event)
+{
+	return GetClientOfUserId(event.GetInt("userid"));
 }
 
 
@@ -420,7 +425,28 @@ public float GetEntitySpeed(int entity)
 	return GetEntPropFloat(entity, Prop_Data, "m_flLaggedMovementValue");
 }
 
+/** 
+ * Sets an entity's armour
+ *
+ * @param entity			Entity Index
+ * @param armour			Armour to set
+ * @noreturn
+ */
+public void SetEntityArmour(int entity, float armour)
+{
+	SetEntProp(entity, Prop_Send, "m_ArmorValue", armour);
+}
 
+/** 
+ * Gets an entity's Armour
+ *
+ * @param entity			Entity Index
+ * @return					Amount of Armour
+ */
+public int GetEntityArmour(int entity)
+{
+	return GetEntProp(entity, Prop_Data, "m_ArmorValue");
+}
 
 /********************************** MISC *********************************/
 
@@ -429,9 +455,9 @@ public float GetEntitySpeed(int entity)
  *
  *
  * @param TimerHandler		Handle of the timer
- * @return					Always INVALID_HANDLE
+ * @noreturn
  */
-stock Handle StopTimer(Handle TimerHandle)
+stock void StopTimer(Handle TimerHandle)
 {
 	KillTimer(TimerHandle);
 	if (TimerHandle != INVALID_HANDLE)
@@ -471,7 +497,7 @@ stock bool AddMenuItemFormat(Handle menu, const char[] info, int style = ITEMDRA
 	return AddMenuItem(menu, info, display, style);
 }
 
-/** Prints a message to a specific client in the hud area. !WIP!
+/** Prints a message to a specific client in the hud area
  * @param client			Client Index.
  * @param message			Message to send
  * @param holdtime			Number of seconds to hold the text.

@@ -67,7 +67,10 @@ ConVar cv_DisableOnEventday;
 ConVar cv_VipJoinMessage;
 ConVar cv_bMenuCustomNade;
 ConVar cv_bVipTag;
+<<<<<<< HEAD
 ConVar cv_bNoFall;
+=======
+>>>>>>> refs/remotes/origin/dev
 //ConVars int
 ConVar cv_iVipSpawnHP;
 ConVar cv_iRegenMaxHP;
@@ -129,12 +132,20 @@ public void OnPluginStart()
 	cv_sVipMenuComm = AutoExecConfig_CreateConVar("sm_VipMenuCommand", "vipmenu", "Commands to open the Vipmenu (no need of sm_ or ! or /)(separeted by a comma ',')");
 	cv_VipJoinMessage = AutoExecConfig_CreateConVar("sm_VipJoinMessage", "1", "Enable join messages");
 	cv_bNoFall = AutoExecConfig_CreateConVar("sm_EnableNoFallDamge", "1", "Enable NoFallDamge");
+<<<<<<< HEAD
+=======
+	cv_bVipTag = AutoExecConfig_CreateConVar("sm_TagOverride", "1", "0 = Place the tag previus the old one, 1 = Override the old tag");
+>>>>>>> refs/remotes/origin/dev
 	cv_sVipTag = AutoExecConfig_CreateConVar("sm_VipTag", "[VIP]", "Clan Tag for Vips, none = disabled");
 	cv_bVipTag = AutoExecConfig_CreateConVar("sm_TagOverride", "1", "0 = Place the tag previus the old one, 1 = Override the old tag");
 	cv_iVipSpawnHP = AutoExecConfig_CreateConVar("sm_VipSpawnHP", "70", "+HP on Spawn, 0 = disabled", 0, true, 0.0, false);
 	cv_fVipSpawnArmour = AutoExecConfig_CreateConVar("sm_VipSpawnArmour", "70", "+Armour on Spawn, 0 = disabled", 0, true, 0.0, false);
 	cv_iVipKillHp = AutoExecConfig_CreateConVar("sm_VipKillHP", "25", "+HP HP for kills, 0 = disabled", 0, true, 0.0, false);
+<<<<<<< HEAD
 	cv_iVipKillHpHead = AutoExecConfig_CreateConVar("sm_VipKillHeadHP", "50", "How much +HP should have Vips for head kills, 0 = disabled", 0, true, 0.0, false);
+=======
+	cv_iVipKillHpHead = AutoExecConfig_CreateConVar("sm_VipKillHeadHP", "50", "How much +HP should have Vips for head kills, 0 = disabled", 0, true, 0.0, false); //WorkInProgress
+>>>>>>> refs/remotes/origin/dev
 	cv_bEnableVipMenu = AutoExecConfig_CreateConVar("sm_EnableVipMenu", "1", "Enable VipMenu?", 0, true, 0.0, true, 1.0);
 	cv_iMenuUse = AutoExecConfig_CreateConVar("sm_VipMenuUse", "1", "Max VipMenu times", 0, true, 0.0, true, 1.0);
 	cv_bMenuLife = AutoExecConfig_CreateConVar("sm_MenuLife", "1", "Enable Life > VipMenu", 0, true, 0.0, true, 1.0);
@@ -166,7 +177,10 @@ public void OnPluginStart()
 	cv_iBhopTeam = AutoExecConfig_CreateConVar("sm_MenuBhopTeam", "3", "Team for use Bhop? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
 	cv_iDoubleTeam = AutoExecConfig_CreateConVar("sm_MenuDoubleTeam", "3", "Team for use DoubleJump? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
 	cv_iRegenTeam = AutoExecConfig_CreateConVar("sm_MenuRegenTeam", "3", "Team for use Regen? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
+<<<<<<< HEAD
 	cv_iWeapTeam = AutoExecConfig_CreateConVar("sm_MenuWeaponTeam", "3", "Team for use CustomWeapon? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
+=======
+>>>>>>> refs/remotes/origin/dev
 	cv_iNadeMolotov = AutoExecConfig_CreateConVar("sm_NadeMolotovs", "1", "Quantity of molotov > CustomNade", 0, true, 0.0, true, 10.0);
 	cv_iNadeFlashbang = AutoExecConfig_CreateConVar("sm_NadeFlashbangs", "1", "Quantity of molotov > CustomNade", 0, true, 0.0, true, 10.0);
 	cv_iNadeHE = AutoExecConfig_CreateConVar("sm_NadeHE", "1", "Quantity of HE > CustomNade", 0, true, 0.0, true, 10.0);
@@ -236,7 +250,11 @@ public Action Command_ResMenu(int client, int args)
 {
 	if (args == 0)
 	{
+<<<<<<< HEAD
 		CReplyToCommand(client, "Usage: !resetvipmenu < client/target > < 1 = silent >");
+=======
+		CReplyToCommand(client, "Try: !resetvipmenu <client/target>");
+>>>>>>> refs/remotes/origin/dev
 		return Plugin_Handled;
 	}
 	char arg1[32];
@@ -479,7 +497,16 @@ void CheckTag(int client) //HANDLE TAG
 			char sOldTag[16];
 			char sNewTag[32];
 			CS_GetClientClanTag(client, sOldTag, sizeof(sOldTag));
+<<<<<<< HEAD
 			Format(sNewTag, sizeof(sNewTag), "%s %s", sVipTag, sNewTag);
+=======
+			if (!StrContains(sOldTag, "Vip", false))
+			{
+				Format(sNewTag, sizeof(sNewTag), "%s %s", sVipTag, sNewTag);
+				CS_SetClientClanTag(client, sNewTag);
+			}
+			
+>>>>>>> refs/remotes/origin/dev
 		}
 	}
 }

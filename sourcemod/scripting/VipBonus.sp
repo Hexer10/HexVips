@@ -108,6 +108,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int max_err
 	return APLRes_Success;
 }
 
+
 public void OnPluginStart()
 {
 	LoadTranslations("VipBonus.phrares");
@@ -150,8 +151,8 @@ public void OnPluginStart()
 	HookEvent("round_start", Event_CheckTag);
 	if (bLateLoad)
 	{
-		for (int i; i <= MaxClients; i++)
-		OnClientPutInServer(i);
+		for (int i = 1; i <= MaxClients; i++)if (IsClientInGame(i))
+			OnClientPutInServer(i);
 	}
 	
 	//Misc
@@ -198,6 +199,7 @@ public void OnClientPutInServer(int client)
 {
 	CheckTag(client);
 	SDKHook(client, SDKHook_TraceAttack, OnTraceAttack);
+	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 }
 
 void CheckTag(int client) //HANDLE TAG
@@ -243,10 +245,13 @@ public void Event_CheckTag(Event event, const char[] name, bool dontBroadcast)
 
 public void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast) //VIP BONUSES ON SPAWN & RESET VIP BOOLS (MENU USES)
 {
+	
 	if (!bEnablePlugin)
 		return;
 	
 	int client = GetClientOfUserId(event.GetInt("userid"));
+	
+	Menu_PlayerSpawn(client);
 	
 	AssignVipBonus(client);
 }
@@ -291,9 +296,9 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
 	if (!IsClientVip(attacker))
 		return Plugin_Continue;
 	
-	if (IsValidClient(victim, true, false) && !cv_sDamageBoost.BoolValue)
+	if (IsValidClient(victim, true, false) && cv_sDamageBoost.BoolValue)
 	{
-		if (StrContains(sDamageBoost, "%", false))
+		if (StrContains(sDamageBoost, "%", false) != -1)
 		{
 			ReplaceString(sDamageBoost, sizeof(sDamageBoost), "%", "", false);
 			int iDamageBoost = StringToInt(sDamageBoost);
@@ -307,9 +312,9 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
 		}
 	}
 	
-	if (IsValidClient(victim, true, false) && !cv_sDamageReduction.BoolValue)
+	if (IsValidClient(victim, true, false) && cv_sDamageReduction.BoolValue)
 	{
-		if (StrContains(sDamageReduction, "%", false))
+		if (StrContains(sDamageReduction, "%", false) != -1)
 		{
 			ReplaceString(sDamageReduction, sizeof(sDamageReduction), "%", "", false);
 			int iDamageReduction = StringToInt(sDamageReduction);
@@ -326,9 +331,9 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
 	
 	if (damagetype & DMG_FALL && cv_bNoFall.BoolValue)
 	{
-		if (cv_iFallReduction.FloatValue == 100)
+		if (cv_iFallReduction.IntValue == 100)
 			return Plugin_Handled;
-		if (cv_iFallReduction.FloatValue == 0)
+		if (cv_iFallReduction.IntValue == 0)
 			return Plugin_Continue;
 		
 		damage -= view_as<int>(damage) % cv_iFallReduction.IntValue;
@@ -338,7 +343,20 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
 }
 
 
-
+public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
+{
+	if (damagetype & DMG_FALL && cv_bNoFall.BoolValue)
+	{
+		if (cv_iFallReduction.IntValue == 100)
+			return Plugin_Handled;
+		if (cv_iFallReduction.IntValue == 0)
+			return Plugin_Continue;
+		
+		damage -= view_as<int>(damage) % cv_iFallReduction.IntValue;
+		return Plugin_Changed;
+	}
+	return Plugin_Continue;
+}
 
 
 
@@ -426,15 +444,12 @@ Action AssignVipBonus(int client)
 
 
 public int Native_CheckVip(Handle plugin, int argc)
+//public bool IsClientVip(int client)
 {
 	int client = GetNativeCell(1);
-	if (client < 1 || client > MaxClients)
+	if (!IsValidClient(client, true, true))
 	{
-		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid client index (%d)", client);
-	}
-	if (!IsClientConnected(client))
-	{
-		return ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", client);
+		return false;
 	}
 	return CheckAdminFlag(client, sFlagNeeded);
 }
@@ -718,6 +733,8 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 	
 	Menu_OnPlayerRunCmd(client, buttons, impulse, vel, angles, weapon);
 	
+	if (!IsClientVip(client))
+		return Plugin_Continue;
 	if (cv_iGrab.IntValue == 0)
 		return Plugin_Continue;
 	

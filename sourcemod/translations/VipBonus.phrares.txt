@@ -153,7 +153,6 @@
     {
         "en" "You got some nades"
     }
-<<<<<<< HEAD
     
     "Reset_Usage"
     {
@@ -172,6 +171,4 @@
         #format "{1:n}"
         "en" "[VIP]{1} joined in the server!"
     }
-=======
->>>>>>> refs/remotes/origin/dev
 }

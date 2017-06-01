@@ -1,4 +1,27 @@
- //Defines
+/*
+ * VipMenu-Bonuses - VipBonus(Core) Plugin.
+ * by: Hexer10
+ * https://github.com/Hexer10/VipMenu-Bonuses
+ * 
+ * Copyright (C) 2016-2017 Mattia (Hexer10 | Hexah | Papero)
+ *
+ * This file is part of the VipMenu-Bonuses SourceMod Plugin.
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License, version 3.0, as published by the
+ * Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
+//Includes
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
@@ -6,99 +29,85 @@
 #include <autoexecconfig>
 #include <hexstocks>
 #include <colors>
+#include <VipBonus>
+
 //#include <chat-processor>
 
 #undef REQUIRE_PLUGIN
 #undef REQUIRE_EXTENSIONS
-#tryinclude <myjailbreaknew>
-#tryinclude <lastrequest>
+#include <myjailbreak>
+#include <lastrequest>
 #define REQUIRE_EXTENSIONS
 #define REQUIRE_PLUGIN
 //Compiler Options
 #pragma newdecls required
 #pragma semicolon 1
 //Defines
-#define Life "#life"
-#define Armour "#armour"
-#define Nade "#nade"
-#define Smoke "#smoke"
-#define Speed "#speed"
-#define Gravity "#gravity"
-#define Regen "#regen"
-#define Bhop "#bhop"
-#define Weap "#weap"
 
-#define DEBUG
+
 
 #define PLUGIN_AUTHOR "Hexah"
-#define PLUGIN_VER "1.00"
+#define PLUGIN_VER "2.00"
 #define DMG_FALL   (1 << 5)
 
-//Chars
+#define VIPMENU 1 //You can remove this without any problems.
+
+//Handle
+Handle fOnVipBonusAdded = INVALID_HANDLE;
+
+//Int
+int iCash = -1;
+int iSprite = -1;
+int iObject[MAXPLAYERS + 1] =  { -1, ... };
+int iGrabbingDeadBody[MAXPLAYERS + 1] =  { -1, ... };
+
+
+//fLOAT
+float fTime[MAXPLAYERS + 1] =  { -1.0, ... };
+float fDistance[MAXPLAYERS + 1] =  { -1.0, ... };
+
+//String
 char sFlagNeeded[32];
-char sWeapon[32];
-char sMenuName[32];
-//Bools
-bool bRegen[MAXPLAYERS + 1] = false;
-bool bBhop[MAXPLAYERS + 1] = false;
-bool bDoubleJump[MAXPLAYERS + 1] = false;
+char sDamageBoost[32];
+char sDamageReduction[32];
+//Bool
 bool bEnablePlugin = false;
 bool bIsMYJBAvaible = false;
-//Handle
-Handle h_Regen[MAXPLAYERS + 1];
-//Int
-int iMenuUse[MAXPLAYERS + 1];
-int iDJumped[MAXPLAYERS + 1];
+bool bLateLoad = false;
+bool bBlockJump = false;
+bool bColored = false;
+
 //Convars bool
-ConVar cv_bEnableVipMenu;
-ConVar cv_bMenuLife;
-ConVar cv_bMenuGravity;
-ConVar cv_bMenuArmour;
-ConVar cv_bMenuRegen;
-ConVar cv_bMenuSpeed;
-ConVar cv_bMenuNade;
-ConVar cv_bMenuSmoke;
-ConVar cv_bMenuBhop;
-ConVar cv_bMenuDobleJump;
-ConVar cv_bStopTimer;
-ConVar cv_bDisableLR;
 ConVar cv_DisableOnEventday;
 ConVar cv_VipJoinMessage;
-ConVar cv_bMenuCustomNade;
 ConVar cv_bVipTag;
+
+ConVar cv_bVipDefuser;
+
 //ConVars int
 ConVar cv_iVipSpawnHP;
-ConVar cv_iRegenMaxHP;
-ConVar cv_iRegenHP;
-ConVar cv_iLifeHP;
-ConVar cv_iArmour;
 ConVar cv_iVipKillHp;
 ConVar cv_iVipKillHpHead;
-ConVar cv_iMenuUse;
-ConVar cv_iLifeTeam;
-ConVar cv_iArmourTeam;
-ConVar cv_iGravityTeam;
-ConVar cv_iSpeedTeam;
-ConVar cv_iNadeTeam;
-ConVar cv_iSmokeTeam;
-ConVar cv_iRegenTeam;
-ConVar cv_iBhopTeam;
-ConVar cv_iDoubleTeam;
-ConVar cv_iWeapTeam;
-ConVar cv_iNadeMolotov;
-ConVar cv_iNadeSmoke;
-ConVar cv_iNadeFlashbang;
-ConVar cv_iNadeHE;
-ConVar cv_iCustomNadeTeam;
+ConVar cv_iNoFall;
+ConVar cv_iGrab;
+ConVar cv_iCashAmount;
+
 //ConVars float
 ConVar cv_fVipSpawnArmour;
-ConVar cv_fHpTimer;
-ConVar cv_fSpeed;
-ConVar cv_fGravity;
-ConVar cv_bNoFall;
-ConVar cv_sFlagNeeded;
-ConVar cv_sWeapon;
+
+//ConVars String
 ConVar cv_sVipTag;
+ConVar cv_sFlagNeeded;
+ConVar cv_sDamageReduction;
+ConVar cv_sDamageBoost;
+
+
+#if (VIPMENU != 0)
+#include "VipMenu.sp"
+#endif
+
+
+
 //Plugin info
 public Plugin myinfo = 
 {
@@ -106,68 +115,53 @@ public Plugin myinfo =
 	author = PLUGIN_AUTHOR, 
 	description = "Provide some bonuses and VipMenu to VIPs", 
 	version = PLUGIN_VER, 
-	url = "sourcemod.net"
+	url = "https://github.com/Hexer10/VipMenu-Bonuses"
 };
 
+/********************************************************************************************************************************
+                                                              START UP
+                                                              
+*********************************************************************************************************************************/
 
-//Start
+
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int max_err)
+{
+	RegPluginLibrary("vipbonus");
+	CreateNative("IsClientVip", Native_CheckVip);
+	fOnVipBonusAdded = CreateGlobalForward("OnVipBonusAssigned", ET_Event, Param_Cell);
+	bLateLoad = late;
+	return APLRes_Success;
+}
+
+
 public void OnPluginStart()
 {
 	LoadTranslations("VipBonus.phrares");
+	LoadTranslations("common.phrares");
+	LoadTranslations("common.phrares");
 	//Convars
-	AutoExecConfig_SetFile("VipBonus");
+	AutoExecConfig_SetFile("VipCore", "VipBonus");
 	AutoExecConfig_SetCreateFile(true);
-	cv_sFlagNeeded = AutoExecConfig_CreateConVar("sm_VipFlag", "a", "Flag needed to be VIP");
-	cv_VipJoinMessage = AutoExecConfig_CreateConVar("sm_VipJoinMessage", "1", "Enable join messages");
-	cv_bNoFall = AutoExecConfig_CreateConVar("sm_EnableNoFallDamge", "1", "Enable NoFallDamge");
-	cv_bVipTag = AutoExecConfig_CreateConVar("sm_TagOverride", "1", "0 = Place the tag previus the old one, 1 = Override the old tag");
-	cv_sVipTag = AutoExecConfig_CreateConVar("sm_VipTag", "[VIP]", "Clan Tag for Vips, none = disabled");
-	cv_iVipSpawnHP = AutoExecConfig_CreateConVar("sm_VipSpawnHP", "70", "+HP on Spawn, 0 = disabled", 0, true, 0.0, false);
-	cv_fVipSpawnArmour = AutoExecConfig_CreateConVar("sm_VipSpawnArmour", "70", "+Armour on Spawn, 0 = disabled", 0, true, 0.0, false);
-	cv_iVipKillHp = AutoExecConfig_CreateConVar("sm_VipKillHP", "25", "+HP HP for kills, 0 = disabled", 0, true, 0.0, false);
-	cv_iVipKillHpHead = AutoExecConfig_CreateConVar("sm_VipKillHeadHP", "50", "How much +HP should have Vips for head kills, 0 = disabled", 0, true, 0.0, false); //WorkInProgress
-	cv_bEnableVipMenu = AutoExecConfig_CreateConVar("sm_EnableVipMenu", "1", "Enable VipMenu?", 0, true, 0.0, true, 1.0);
-	cv_iMenuUse = AutoExecConfig_CreateConVar("sm_VipMenuUse", "1", "Max VipMenu times", 0, true, 0.0, true, 1.0); //WorkInProgress
-	cv_bMenuLife = AutoExecConfig_CreateConVar("sm_MenuLife", "1", "Enable Life > VipMenu", 0, true, 0.0, true, 1.0);
-	cv_bMenuArmour = AutoExecConfig_CreateConVar("sm_MenuArmour", "1", "Enable Armour > VipMenu", 0, true, 0.0, true, 1.0);
-	cv_bMenuGravity = AutoExecConfig_CreateConVar("sm_MenuGravity", "1", "Enable Gravity > VipMenu", 0, true, 0.0, true, 1.0);
-	cv_bMenuSpeed = AutoExecConfig_CreateConVar("sm_MenuSpeed", "1", "Enable Speed > VipMenu", 0, true, 0.0, true, 1.0);
-	cv_bMenuNade = AutoExecConfig_CreateConVar("sm_MenuNade", "1", "Enable HE Nade > VipMenu", 0, true, 0.0, true, 1.0);
-	cv_bMenuSmoke = AutoExecConfig_CreateConVar("sm_MenuSmoke", "1", "Enable Smoke > VipMenu", 0, true, 0.0, true, 1.0);
-	cv_bMenuCustomNade = AutoExecConfig_CreateConVar("sm_MenuCustomNade", "1", "Enable CustomNade > VipMenu", 0, true, 0.0, true, 1.0);
-	cv_bMenuRegen = AutoExecConfig_CreateConVar("sm_MenuRegen", "1", "Enable Regen > VipMenu", 0, true, 0.0, true, 1.0);
-	cv_bMenuBhop = AutoExecConfig_CreateConVar("sm_MenuBhop", "1", "Enable BunnyHop > VipMenu", 0, true, 0.0, true, 1.0);
-	cv_bMenuDobleJump = AutoExecConfig_CreateConVar("sm_MenuDoubleJump", "1", "Enable DoubleJump > VipMenu", 0, true, 0.0, true, 1.0);
-	cv_sWeapon = AutoExecConfig_CreateConVar("sm_MenuWeapon", "glock", "CustomWeapon > VipMenu, none = disabled");
-	cv_iLifeHP = AutoExecConfig_CreateConVar("sm_BLifeHP", "50", "Quantity of +HP");
-	cv_iArmour = AutoExecConfig_CreateConVar("sm_BArmour", "50", "Quantity of +Armour");
-	cv_fGravity = AutoExecConfig_CreateConVar("sm_BGravity", "0.5", "Quantity of Gravity");
-	cv_fSpeed = AutoExecConfig_CreateConVar("sm_BSpeed", "1.5", "Quantity of Speed");
-	cv_iRegenMaxHP = AutoExecConfig_CreateConVar("sm_RegenMaxHP", "200", "Max HP to reach > Regen");
-	cv_fHpTimer = AutoExecConfig_CreateConVar("sm_RegenInt", "1.0", "Regen interval");
-	cv_iRegenHP = AutoExecConfig_CreateConVar("sm_HpRegen", "10", "+HP for Regen");
-	cv_bStopTimer = AutoExecConfig_CreateConVar("sm_RegenStop", "0", "Stop Regen when reached the MaxHP (0) or continue when get lower (1)?", 0, true, 0.0, true, 1.0);
-	cv_iLifeTeam = AutoExecConfig_CreateConVar("sm_MenuLifeTeam", "3", "Team for use Life? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
-	cv_iArmourTeam = AutoExecConfig_CreateConVar("sm_MenuArmourTeam", "3", "Team for use Armour? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
-	cv_iGravityTeam = AutoExecConfig_CreateConVar("sm_MenuGravityTeam", "3", "Team for use Gravity? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
-	cv_iSpeedTeam = AutoExecConfig_CreateConVar("sm_MenuSpeedTeam", "3", "Team for use Speed? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
-	cv_iNadeTeam = AutoExecConfig_CreateConVar("sm_MenuNadeTeam", "3", "Team for use Nade? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
-	cv_iSmokeTeam = AutoExecConfig_CreateConVar("sm_MenuSmokeTeam", "3", "Team for use Smoke? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
-	cv_iCustomNadeTeam = AutoExecConfig_CreateConVar("sm_MenuSmokeTeam", "3", "Team for use CustomNades? 1 = T 2 = CT 3 = BOTH", 0, true, 1.0, true, 3.0);
-	cv_iBhopTeam = AutoExecConfig_CreateConVar("sm_MenuBhopTeam", "3", "Team for use Bhop? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
-	cv_iDoubleTeam = AutoExecConfig_CreateConVar("sm_MenuDoubleTeam", "3", "Team for use DoubleJump? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
-	cv_iRegenTeam = AutoExecConfig_CreateConVar("sm_MenuRegenTeam", "3", "Team for use Regen? 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
-	cv_iNadeMolotov = AutoExecConfig_CreateConVar("sm_NadeMolotovs", "1", "Quantity of molotov > CustomNade", 0, true, 0.0, true, 10.0);
-	cv_iNadeFlashbang = AutoExecConfig_CreateConVar("sm_NadeFlashbangs", "1", "Quantity of molotov > CustomNade", 0, true, 0.0, true, 10.0);
-	cv_iNadeHE = AutoExecConfig_CreateConVar("sm_NadeHE", "1", "Quantity of HE > CustomNade", 0, true, 0.0, true, 10.0);
-	cv_iNadeSmoke = AutoExecConfig_CreateConVar("sm_NadeSmoke", "1", "Quantity of smokes > CustomNade", 0, true, 0.0, true, 10.0);
-	cv_bDisableLR = AutoExecConfig_CreateConVar("sm_DisableVipLR", "1", "Disable VipMenu > LR", 0, true, 0.0, true, 1.0);
-	cv_DisableOnEventday = AutoExecConfig_CreateConVar("sm_DisableVipEvent", "1", "Disable VipMenu > MYJB EventDay", 0, true, 0.0, true, 1.0);
+	cv_sFlagNeeded = AutoExecConfig_CreateConVar("vip_core_flag", "a", "Flag to have Vip access. - none = No flag needed.");
+	cv_VipJoinMessage = AutoExecConfig_CreateConVar("vip_core_join", "1", " 1 - Enable join message. 0 - Disable.");
+	cv_sDamageReduction = AutoExecConfig_CreateConVar("vip_core_damage_reduction", "0", " Amount of damage boost ( Can be % also ). 0 - Disable.");
+	cv_sDamageBoost = AutoExecConfig_CreateConVar("vip_core_damage_booster", "0", " Amount of damage reduction ( Can be % also ). 0 - Disable.");
+	cv_iNoFall = AutoExecConfig_CreateConVar("vip_core_nofall", "100", "% of FallDamage reduction. 0 - Disable.", 0, true, 0.0, true, 100.0);
+	cv_sVipTag = AutoExecConfig_CreateConVar("vip_core_tag", "[VIP]", "Clan Tag for Vips. - none - Disable. ( Check phrares: VipJoin message)");
+	cv_bVipTag = AutoExecConfig_CreateConVar("vip_core_tag_override", "1", " 0 - Place the tag before the exising. 1 - Override the old tag.");
+	cv_bVipDefuser = AutoExecConfig_CreateConVar("vip_core_defuser", "1", "Give defuse kit to VIP Cts", 0, true, 0.0, true, 1.0);
+	cv_iGrab = AutoExecConfig_CreateConVar("vip_core_grag", "1", " 2 - Grab anythink. 1 - Grab only dead bodies. 0 - Disable. ( WIP )");
+	cv_iVipSpawnHP = AutoExecConfig_CreateConVar("vip_core_spawn_hp", "70", "+HP on Spawn. 0 - disable", 0, true, 0.0, false);
+	cv_fVipSpawnArmour = AutoExecConfig_CreateConVar("vip_core_spawn_armour", "70", "+Armour on Spawn. 0 - disabled", 0, true, 0.0, false);
+	cv_iVipKillHp = AutoExecConfig_CreateConVar("vip_core_kill_hp", "25", "+HP HP for kills. 0 - disabled", 0, true, 0.0, false);
+	cv_iVipKillHpHead = AutoExecConfig_CreateConVar("vip_core_kill_hs", "50", "+HP for HS kills. 0 - disabled", 0, true, 0.0, false);
+	cv_iCashAmount = AutoExecConfig_CreateConVar("vip_core_round_cash", "500", "+Cash every round start. 0 - disabled", 0, true, 0.0, true, 30000.00);
+	cv_DisableOnEventday = AutoExecConfig_CreateConVar("vip_core_disable_event", "1", "Disable Vip in MYJB EventDays", 0, true, 0.0, true, 1.0);
 	AutoExecConfig_ExecuteFile();
 	AutoExecConfig_CleanFile();
-	//Commands
-	RegConsoleCmd("sm_vipmenu", Command_VipMenu, "Open VipMenu for VIPs");
-	RegAdminCmd("sm_resetvipmenu", Command_ResMenu, ADMFLAG_CONFIG, "Reset VIPMenu advantages (Weapons remains)");
+	//OffSet
+	iCash = FindSendPropInfo("CCSPlayer", "m_iAccount");
+	
 	//Hooks
 	HookEvent("player_spawn", Event_PlayerSpawn);
 	HookEvent("round_start", Event_RoundStart);
@@ -177,299 +171,41 @@ public void OnPluginStart()
 	HookEvent("player_spawn", Event_CheckTag);
 	HookEvent("player_death", Event_CheckTag);
 	HookEvent("round_start", Event_CheckTag);
+	if (bLateLoad)
+	{
+		for (int i = 1; i <= MaxClients; i++)if (IsClientInGame(i))
+			OnClientPutInServer(i);
+	}
+	
 	//Misc
 	cv_sFlagNeeded.GetString(sFlagNeeded, sizeof(sFlagNeeded));
-	cv_sWeapon.GetString(sWeapon, sizeof(sWeapon));
+	cv_sDamageReduction.GetString(sDamageReduction, sizeof(sDamageReduction));
+	cv_sDamageBoost.GetString(sDamageBoost, sizeof(sDamageBoost));
 	
+	#if (VIPMENU != 0)
+	OnVipMenuStart();
+	#endif
 }
-/********************************************************************************************************************************
-                                                              COMMANDS
-                                                              
-*********************************************************************************************************************************/
 
-
-
-public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
+public void OnMapStart()
 {
-	if (damagetype & DMG_FALL && CheckAdminFlag(victim, sFlagNeeded) && cv_bNoFall.BoolValue)
-	{
-		return Plugin_Handled;
-	}
-	return Plugin_Continue;
+	iSprite = PrecacheModel("materials/sprites/laserbeam.vmt");
 }
 
 
-public Action Command_ResMenu(int client, int args)
+public void OnLibraryAdded(const char[] name)
 {
-	if (args == 0)
+	if (StrEqual(name, "myjailbreak"))
 	{
-		CReplyToCommand(client, "Try: !resetvipmenu <client/target>");
-		return Plugin_Handled;
-	}
-	char arg1[32];
-	GetCmdArg(1, arg1, sizeof(arg1));
-	char target_name[MAX_TARGET_LENGTH];
-	int target_list[MAXPLAYERS], target_count;
-	bool tn_is_ml;
-	
-	if ((target_count = ProcessTargetString(
-				arg1, 
-				client, 
-				target_list, 
-				MAXPLAYERS, 
-				COMMAND_FILTER_ALIVE, /* Only allow alive players */
-				target_name, 
-				sizeof(target_name), 
-				tn_is_ml)) <= 0)
-	{
-		CReplyToCommand(client, "Target not valid");
-	}
-	for (int i = 0; i < target_count; i++)
-	{
-		iMenuUse[target_list[i]] = 0;
-		bRegen[target_list[i]] = false;
-		bBhop[target_list[i]] = false;
-		bDoubleJump[target_list[i]] = false;
-		if (h_Regen[client] != INVALID_HANDLE)
-		{
-			KillTimer(h_Regen[client]);
-			h_Regen[client] = INVALID_HANDLE;
-		}
-	}
-	return Plugin_Handled;
-}
-
-public Action Command_VipMenu(int client, int args)
-{
-	if (!CheckAdminFlag(client, sFlagNeeded))
-	{
-		CReplyToCommand(client, "%t %t", "%t", "Prefix", "Not_Vip");
-	}
-	if (!cv_bEnableVipMenu.BoolValue)
-	{
-		CReplyToCommand(client, "%t %t", "Prefix", "Plugin_Disable");
-	}
-	else if (!IsPlayerAlive(client)) //Alive check
-	{
-		CReplyToCommand(client, "%t %t", "Prefix", "Player_Death");
-	}
-	else if (iMenuUse[client] == cv_iMenuUse.IntValue)
-	{
-		CReplyToCommand(client, "%t %t", "Prefix", "Menu_Already");
-	}
-	else //Client is valid
-	{
-		vmenu(client);
-	}
-	
-	return Plugin_Handled;
-}
-
-/********************************************************************************************************************************
-                                                              EVENTS
-                                                              
-*********************************************************************************************************************************/
-
-
-public void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast) //VIP BONUSES ON SPAWN & RESET VIP BOOLS (MENU USES)
-{
-	int client = GetClientOfUserId(event.GetInt("userid"));
-	iMenuUse[client] = 0;
-	bRegen[client] = false;
-	bBhop[client] = false;
-	bDoubleJump[client] = false;
-	if (h_Regen[client] != INVALID_HANDLE)
-	{
-		KillTimer(h_Regen[client]);
-		h_Regen[client] = INVALID_HANDLE;
-	}
-	
-	if (CheckAdminFlag(client, sFlagNeeded)) //Perm check
-	{
-		if (cv_DisableOnEventday)
-		{
-			if (bIsMYJBAvaible && MyJailbreak_IsEventDayRunning())
-			{
-				bEnablePlugin = true;
-				cv_bEnableVipMenu.BoolValue = false;
-				return;
-			}
-		}
-		if (cv_iVipSpawnHP.IntValue >= 1 || cv_fVipSpawnArmour.IntValue >= 1)
-		{
-			SetEntProp(client, Prop_Send, "m_ArmorValue", cv_fVipSpawnArmour.IntValue);
-			int i_SpawnHealth = GetClientHealth(client);
-			SetEntityHealth(client, i_SpawnHealth + cv_iVipSpawnHP.IntValue);
-		}
+		bIsMYJBAvaible = true;
 	}
 }
 
-public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast) //RESET BOOLS ON ROUNDSTART AFTER EVENTDAY
+public void OnLibraryRemoved(const char[] name)
 {
-	if (bEnablePlugin)
+	if (StrEqual(name, "myjailbreak"))
 	{
-		cv_bEnableVipMenu.BoolValue = true;
-		bEnablePlugin = false;
-	}
-}
-
-public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon) //BUNNY HOP & DoubleJump (Thx to shanapu)
-{
-	int water = GetEntProp(client, Prop_Data, "m_nWaterLevel");
-	
-	static bool bPressed[MAXPLAYERS + 1] = false;
-	
-	if (IsPlayerAlive(client) && CheckAdminFlag(client, sFlagNeeded))
-	{
-		if (GetEntityFlags(client) & FL_ONGROUND)
-		{
-			iDJumped[client] = 0;
-			bPressed[client] = false;
-		}
-		else
-		{
-			if (buttons & IN_JUMP)
-			{
-				if (water <= 1)
-				{
-					if (!(GetEntityMoveType(client) & MOVETYPE_LADDER))
-					{
-						SetEntPropFloat(client, Prop_Send, "m_flStamina", 0.0);
-						if (!(GetEntityFlags(client) & FL_ONGROUND) && bBhop[client])buttons &= ~IN_JUMP;
-					}
-				}
-				
-				if (!bDoubleJump[client])return Plugin_Continue;
-				
-				if (!bPressed[client] && iDJumped[client]++ == 1)
-				{
-					float velocity[3];
-					float velocity0;
-					float velocity1;
-					float velocity2;
-					float velocity2_new;
-					
-					// Get player velocity
-					velocity0 = GetEntPropFloat(client, Prop_Send, "m_vecVelocity[0]");
-					velocity1 = GetEntPropFloat(client, Prop_Send, "m_vecVelocity[1]");
-					velocity2 = GetEntPropFloat(client, Prop_Send, "m_vecVelocity[2]");
-					
-					velocity2_new = 200.0;
-					
-					// calculate new velocity^^
-					if (velocity2 < 150.0)velocity2_new = velocity2_new + 20.0;
-					
-					if (velocity2 < 100.0)velocity2_new = velocity2_new + 30.0;
-					
-					if (velocity2 < 50.0)velocity2_new = velocity2_new + 40.0;
-					
-					if (velocity2 < 0.0)velocity2_new = velocity2_new + 50.0;
-					
-					if (velocity2 < -50.0)velocity2_new = velocity2_new + 60.0;
-					
-					if (velocity2 < -100.0)velocity2_new = velocity2_new + 70.0;
-					
-					if (velocity2 < -150.0)velocity2_new = velocity2_new + 80.0;
-					
-					if (velocity2 < -200.0)velocity2_new = velocity2_new + 90.0;
-					
-					// Set new velocity
-					velocity[0] = velocity0 * 0.1;
-					velocity[1] = velocity1 * 0.1;
-					velocity[2] = velocity2_new;
-					
-					// Double Jump
-					SetEntPropVector(client, Prop_Send, "m_vecBaseVelocity", velocity);
-				}
-				
-				bPressed[client] = true;
-			}
-			else bPressed[client] = false;
-			
-		}
-	}
-	
-	return Plugin_Continue;
-}
-
-
-public void OnClientPutInServer(int client)
-{
-	CheckTag(client);
-	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
-}
-
-public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast) //HP ON KILL
-{
-	int client = GetClientOfUserId(GetEventInt(event, "userid"));
-	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
-	bool headshot = GetEventBool(event, "headshot");
-	if (CheckAdminFlag(client, sFlagNeeded) && client == attacker && cv_iVipKillHp.IntValue >= 1 && !headshot)
-	{
-		int iHealth = GetClientHealth(attacker);
-		SetEntityHealth(attacker, cv_iVipKillHp.IntValue + iHealth);
-	}
-	if (CheckAdminFlag(client, sFlagNeeded) && client == attacker && cv_iVipKillHp.IntValue >= 1 && headshot)
-	{
-		int iHealth = GetClientHealth(attacker);
-		SetEntityHealth(attacker, cv_iVipKillHpHead.IntValue + iHealth);
-	}
-}
-
-public void Event_CheckTag(Event event, const char[] name, bool dontBroadcast)
-{
-	CreateTimer(1.0, DelayCheck);
-}
-
-void CheckTag(int client) //HANDLE TAG
-{
-	char sVipTag[32];
-	cv_sVipTag.GetString(sVipTag, sizeof(sVipTag));
-	if (CheckAdminFlag(client, sFlagNeeded) && !StrEqual(sVipTag, "none", false))
-	{
-		if (cv_bVipTag.BoolValue)
-			CS_SetClientClanTag(client, sVipTag);
-		else if (!cv_bVipTag.BoolValue)
-		{
-			char sOldTag[16];
-			char sNewTag[32];
-			CS_GetClientClanTag(client, sOldTag, sizeof(sOldTag));
-			if (!StrContains(sOldTag, "Vip", false))
-			{
-				Format(sNewTag, sizeof(sNewTag), "%s %s", sVipTag, sNewTag);
-				CS_SetClientClanTag(client, sNewTag);
-			}
-			
-		}
-	}
-}
-
-public void OnClientPostAdminCheck(int client)
-{
-	if (CheckAdminFlag(client, sFlagNeeded) && cv_VipJoinMessage.BoolValue)
-	{
-		CPrintToChatAll("[VIP]%N joined in the server!", client);
-	}
-}
-
-public void OnAvailableLR(int Announced) //DISABLE ITEMS ON LASTREQEST
-{
-	if (cv_bDisableLR.BoolValue)
-	{
-		LoopClients(client)
-		{
-			if (IsPlayerAlive(client))
-			{
-				iMenuUse[client] = 0;
-				bRegen[client] = false;
-				bBhop[client] = false;
-				if (h_Regen[client] != INVALID_HANDLE)
-				{
-					KillTimer(h_Regen[client]);
-					h_Regen[client] = INVALID_HANDLE;
-				}
-			}
-		}
+		bIsMYJBAvaible = false;
 	}
 }
 
@@ -478,210 +214,183 @@ public void OnAllPluginsLoaded()
 	bIsMYJBAvaible = LibraryExists("myjailbreak");
 }
 
-/*public Action OnChatMessage(int & author, ArrayList recipients, eChatFlags & flag, char[] name, char[] message, bool & bProcessColors, bool & bRemoveColors) //VIP TAG IN THE CHAT      *WorkInProgress* NOT TESTED
-{
-	cv_sVipChatTag.GetString(sVipChatTag, sizeof(sVipChatTag))
-	if (CheckVipFlag(client, sFlagNeeded) && !StrEqual(sVipChatTag, "none", false))
-		Format(name, MAXLENGTH_NAME, "%t %s", sVipChatTag, name); 
-}*/
 
 /********************************************************************************************************************************
-                                                              MENU
+                                                              EVENTS
                                                               
 *********************************************************************************************************************************/
 
-void vmenu(int client) //MENU
+
+public void OnClientPutInServer(int client)
 {
-	Menu menu = CreateMenu(hMenu, MENU_ACTIONS_ALL);
-	
-	Format(sMenuName, sizeof(sMenuName), "%t", "Menu_Title");
-	menu.SetTitle(sMenuName);
-	if (cv_bMenuLife.BoolValue && IsValidTeam(client, cv_iLifeTeam.IntValue))
-	{
-		AddMenuItemFormat(menu, "Life", ITEMDRAW_DEFAULT, "%t", "Menu_Life");
-		
-	}
-	if (cv_bMenuArmour.BoolValue && IsValidTeam(client, cv_iArmourTeam.IntValue))
-	{
-		AddMenuItemFormat(menu, "Armour", ITEMDRAW_DEFAULT, "%t", "Menu_Armour");
-	}
-	if (cv_bMenuNade.BoolValue && IsValidTeam(client, cv_iNadeTeam.IntValue))
-	{
-		AddMenuItemFormat(menu, "Nade", ITEMDRAW_DEFAULT, "%t", "Menu_Granade");
-	}
-	if (cv_bMenuSmoke.BoolValue && IsValidTeam(client, cv_iSmokeTeam.IntValue))
-	{
-		AddMenuItemFormat(menu, "Smoke", ITEMDRAW_DEFAULT, "%t", "Menu_Smoke");
-	}
-	if (cv_bMenuCustomNade.BoolValue && IsValidTeam(client, cv_iCustomNadeTeam.IntValue))
-	{
-		AddMenuItemFormat(menu, "CustomNade", ITEMDRAW_DEFAULT, "%t", "Menu_CustomNade");
-	}
-	if (cv_bMenuSpeed.BoolValue && IsValidTeam(client, cv_iSpeedTeam.IntValue))
-	{
-		AddMenuItemFormat(menu, "Speed", ITEMDRAW_DEFAULT, "%t", "Menu_Speed");
-	}
-	if (cv_bMenuGravity.BoolValue && IsValidTeam(client, cv_iGravityTeam.IntValue))
-	{
-		AddMenuItemFormat(menu, "Gravity", ITEMDRAW_DEFAULT, "%t", "Menu_Gravity");
-	}
-	if (cv_bMenuRegen.BoolValue && IsValidTeam(client, cv_iRegenTeam.IntValue))
-	{
-		AddMenuItemFormat(menu, "Regen", ITEMDRAW_DEFAULT, "%t", "Menu_Regen");
-	}
-	
-	if (cv_bMenuBhop.BoolValue && IsValidTeam(client, cv_iBhopTeam.IntValue))
-	{
-		AddMenuItemFormat(menu, "Bhop", ITEMDRAW_DEFAULT, "%t", "Menu_Bhop");
-	}
-	
-	if (cv_bMenuDobleJump.BoolValue && IsValidTeam(client, cv_iDoubleTeam.IntValue))
-	{
-		AddMenuItemFormat(menu, "Double", ITEMDRAW_DEFAULT, "%t", "Menu_DoubleJump");
-	}
-	
-	if (!StrEqual(sWeapon, "none", false) && IsValidTeam(client, cv_iWeapTeam.IntValue))
-	{
-		AddMenuItemFormat(menu, "Weap", ITEMDRAW_DEFAULT, "%t", "Menu_Weapon");
-	}
-	
-	menu.ExitButton = true;
-	menu.Display(client, MENU_TIME_FOREVER);
+	CheckTag(client);
+	SDKHook(client, SDKHook_TraceAttack, OnTraceAttack);
+	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 }
 
-public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU HANDLER
+void CheckTag(int client) //HANDLE TAG
 {
-	if (action == MenuAction_Select)
+	char sVipTag[32];
+	cv_sVipTag.GetString(sVipTag, sizeof(sVipTag));
+	if (IsClientVip(client) && !StrEqual(sVipTag, "none", false))
 	{
-		char info[128];
-		
-		GetMenuItem(menu, param2, info, sizeof(info));
-		if (strcmp(info, "Life") == 0)
+		if (cv_bVipTag.BoolValue)
+			CS_SetClientClanTag(client, sVipTag);
+		else if (!cv_bVipTag.BoolValue)
 		{
-			CPrintToChat(client, "%t %t", "Prefix", "Get_Life");
-			int iClientHealth = GetClientHealth(client);
-			SetEntProp(client, Prop_Send, "m_iHealth", cv_iLifeHP.IntValue + iClientHealth);
-			iMenuUse[client]++;
-		}
-		else if (strcmp(info, "Armour") == 0)
-		{
-			CPrintToChat(client, "%t %t", "Prefix", "Get_Armour");
-			SetEntProp(client, Prop_Send, "m_ArmorValue", cv_iArmour.IntValue);
-			iMenuUse[client]++;
-		}
-		else if (strcmp(info, "Nade") == 0)
-		{
-			CPrintToChat(client, "%t %t", "Prefix", "Get_Nade");
-			GivePlayerItem(client, "weapon_hegrenade");
-			iMenuUse[client]++;
-		}
-		else if (strcmp(info, "Smoke") == 0)
-		{
-			CPrintToChat(client, "%t %t", "Prefix", "Get_Smoke");
-			GivePlayerItem(client, "weapon_smokegrenade");
-			iMenuUse[client]++;
-		}
-		else if (strcmp(info, "Speed") == 0)
-		{
-			CPrintToChat(client, "%t %t", "Prefix", "Get_Speed");
-			SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", cv_fSpeed.FloatValue);
-			iMenuUse[client]++;
-		}
-		else if (strcmp(info, "Gravity") == 0)
-		{
-			CPrintToChat(client, "%t %t", "Prefix", "Get_Gravity");
-			SetEntityGravity(client, cv_fGravity.FloatValue);
-			iMenuUse[client]++;
-		}
-		else if (strcmp(info, "Regen") == 0)
-		{
-			CPrintToChat(client, "%t %t", "Prefix", "Get_Regen");
-			bRegen[client] = true;
-			h_Regen[client] = CreateTimer(cv_fHpTimer.FloatValue, Timer_Regen, client, TIMER_REPEAT);
-			iMenuUse[client]++;
-		}
-		else if (strcmp(info, "Bhop") == 0)
-		{
-			CPrintToChat(client, "%t %t", "Prefix", "Get_Bhop");
-			bBhop[client] = true;
-			iMenuUse[client]++;
-		}
-		
-		else if (strcmp(info, "Double") == 0)
-		{
-			CPrintToChat(client, "%t %t", "Prefix", "Get_DoubleJump");
-			bDoubleJump[client] = true;
-			iMenuUse[client]++;
-		}
-		
-		else if (strcmp(info, "CustomNade") == 0)
-		{
-			iMenuUse[client]++;
-			if (cv_iNadeMolotov.IntValue != 0)
-			{
-				GivePlayerWeaponAndAmmo(client, "weapon_molotov", 1, cv_iNadeMolotov.IntValue);
-			}
-			if (cv_iNadeFlashbang.IntValue != 0)
-			{
-				GivePlayerWeaponAndAmmo(client, "weapon_flashbang", 1, cv_iNadeFlashbang.IntValue);
-			}
-			if (cv_iNadeHE.IntValue != 0)
-			{
-				GivePlayerWeaponAndAmmo(client, "weapon_hegrenade", 1, cv_iNadeHE.IntValue);
-			}
-			if (cv_iNadeSmoke.IntValue != 0)
-			{
-				GivePlayerWeaponAndAmmo(client, "weapon_smokegrenade", 1, cv_iNadeSmoke.IntValue);
-			}
-		}
-		
-		else if (strcmp(info, "Weap") == 0)
-		{
-			iMenuUse[client]++;
-			if (StrContains(sWeapon, "weapon_", true))
-			{
-				Format(sWeapon, sizeof(sWeapon), "weapon_%s", sWeapon);
-			}
-			
-			if (GivePlayerItem(client, sWeapon) == -1)
-			{
-				PrintToConsole(client, "[SM]Invalid Item name/id");
-				iMenuUse[client]--;
-			}
-			else
-				PrintToChat(client, "%t %t", "Prefix", "Get_Weapon");
-			
-		}
-		else if (action == MenuAction_End)
-		{
-			delete menu;
+			char sOldTag[16];
+			char sNewTag[32];
+			CS_GetClientClanTag(client, sOldTag, sizeof(sOldTag));
+			if (StrContains(sOldTag, sVipTag) != -1)
+				Format(sNewTag, sizeof(sNewTag), "%s %s", sVipTag, sNewTag);
 		}
 	}
 }
+
+public void OnClientPostAdminCheck(int client)
+{
+	if (IsClientVip(client) && cv_VipJoinMessage.BoolValue)
+	{
+		CPrintToChatAll("%t", "Vip_Joined", client);
+	}
+}
+
+public void Event_CheckTag(Event event, const char[] name, bool dontBroadcast)
+{
+	CreateTimer(1.0, DelayCheck);
+}
+
+
+
+/********************************************************************************************************************************
+                                                              GENERIC EVENTS
+                                                              
+*********************************************************************************************************************************/
+
+
+
+public void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast) //VIP BONUSES ON SPAWN & RESET VIP BOOLS (MENU USES)
+{
+	
+	if (!bEnablePlugin)
+		return;
+	
+	int client = GetClientOfUserId(event.GetInt("userid"));
+	
+	#if (VIPMENU != 0)
+	Menu_PlayerSpawn(client);
+	#endif
+	
+	AssignVipBonus(client);
+	
+}
+
+
+
+public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast) //RESET BOOLS ON ROUNDSTART AFTER EVENTDAY
+{
+	#if (VIPMENU != 0)
+	EnableVipMenuEDays();
+	#endif
+	
+	int client = GetClientOfUserId(event.GetInt("userid"));
+	
+	SetEntData(client, iCash, cv_iCashAmount.IntValue);
+	
+	if (bEnablePlugin)
+	{
+		bEnablePlugin = false;
+	}
+}
+
+public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast) //HP ON KILL
+{
+	int client = GetClientOfUserId(event.GetInt("userid"));
+	int attacker = GetClientOfUserId(event.GetInt("attacker"));
+	bool headshot = event.GetBool("headshot");
+	if (IsClientVip(client) && client != attacker && cv_iVipKillHp.IntValue >= 1 && headshot)
+	{
+		int iHealth = GetClientHealth(attacker);
+		SetEntityHealth(attacker, cv_iVipKillHpHead.IntValue + iHealth);
+		return;
+	}
+	else if (IsClientVip(attacker) && client != attacker && cv_iVipKillHp.IntValue >= 1 && !headshot)
+	{
+		int iHealth = GetClientHealth(attacker);
+		SetEntityHealth(attacker, cv_iVipKillHp.IntValue + iHealth);
+	}
+	
+}
+
+public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &ammotype, int hitbox, int hitgroup)
+{
+	if (!IsClientVip(attacker))
+		return Plugin_Continue;
+	
+	if (IsValidClient(victim, true, false) && cv_sDamageBoost.BoolValue)
+	{
+		if (StrContains(sDamageBoost, "%", false) != -1)
+		{
+			ReplaceString(sDamageBoost, sizeof(sDamageBoost), "%", "", false);
+			int iDamageBoost = StringToInt(sDamageBoost);
+			damage += view_as<int>(damage) % iDamageBoost;
+			return Plugin_Changed;
+		}
+		else
+		{
+			damage += cv_sDamageBoost.IntValue;
+			return Plugin_Changed;
+		}
+	}
+	
+	if (IsValidClient(victim, true, false) && cv_sDamageReduction.BoolValue)
+	{
+		if (StrContains(sDamageReduction, "%", false) != -1)
+		{
+			ReplaceString(sDamageReduction, sizeof(sDamageReduction), "%", "", false);
+			int iDamageReduction = StringToInt(sDamageReduction);
+			damage -= view_as<int>(damage) % iDamageReduction;
+			return Plugin_Changed;
+		}
+		else
+		{
+			damage -= cv_sDamageReduction.IntValue;
+			return Plugin_Changed;
+		}
+	}
+	
+	
+	return Plugin_Continue;
+}
+
+
+public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
+{
+	if ((damagetype & DMG_FALL) && (cv_iNoFall.IntValue >= 1))
+	{
+		if (cv_iNoFall.IntValue == 100)
+			return Plugin_Handled;
+		if (cv_iNoFall.IntValue == 0)
+			return Plugin_Continue;
+		
+		damage -= view_as<int>(damage) % cv_iNoFall.IntValue;
+		return Plugin_Changed;
+	}
+	return Plugin_Continue;
+}
+
+
+
 /********************************************************************************************************************************
                                                               TIMERS
                                                               
 *********************************************************************************************************************************/
 
-public Action Timer_Regen(Handle timer, any client) //REGENERATION TIMER
+public Action tDelayLife(Handle timer, any client)
 {
-	int iHealth = GetClientHealth(client);
-	if (IsValidClientVip(client))
-	{
-		if (cv_iRegenMaxHP.IntValue < iHealth)
-		{
-			if (!cv_bStopTimer)
-			{
-				KillTimer(h_Regen[client]);
-			}
-			else
-				return;
-		}
-		else if (bRegen[client])
-		{
-			SetEntityHealth(client, iHealth + cv_iRegenHP.IntValue);
-		}
-	}
+	SetEntProp(client, Prop_Send, "m_ArmorValue", cv_fVipSpawnArmour.IntValue);
+	int i_SpawnHealth = GetClientHealth(client);
+	SetEntityHealth(client, i_SpawnHealth + cv_iVipSpawnHP.IntValue);
 }
 
 public Action DelayCheck(Handle timer)
@@ -695,20 +404,11 @@ public Action DelayCheck(Handle timer)
 }
 
 
+
 /********************************************************************************************************************************
                                                               STOCKS
                                                               
 *********************************************************************************************************************************/
-
-stock bool IsValidClientVip(int client) //IS VALID CLIENT
-{
-	if (!(!IsClientInGame(client) || !IsPlayerAlive(client) || IsFakeClient(client) || GetClientTeam(client) < 2 || IsClientSourceTV(client) || IsClientReplay(client)))
-	{
-		return false;
-	}
-	return true;
-}
-
 
 stock bool IsValidTeam(int client, int convar)
 {
@@ -728,4 +428,391 @@ stock bool IsValidTeam(int client, int convar)
 	{
 		return false;
 	}
-} 
+}
+
+
+/********************************************************************************************************************************
+                                                              API
+                                                              
+*********************************************************************************************************************************/
+
+Action AssignVipBonus(int client)
+{
+	Action res = Plugin_Continue;
+	
+	Call_StartForward(fOnVipBonusAdded);
+	Call_PushCell(client);
+	Call_Finish(res);
+	
+	if (res >= Plugin_Handled)
+	{
+		return Plugin_Handled;
+	}
+	
+	#if (VIPMENU != 0)
+	ResetVipBonus(client);
+	#endif
+	
+	if (bIsMYJBAvaible && cv_DisableOnEventday.BoolValue)
+	{
+		return Plugin_Handled;
+	}
+	
+	if (cv_iVipSpawnHP.IntValue >= 1 || cv_fVipSpawnArmour.IntValue >= 1)
+	{
+		CreateTimer(3.7, tDelayLife, client, TIMER_FLAG_NO_MAPCHANGE);
+	}
+	
+	if (cv_bVipDefuser.BoolValue)
+	{
+		GivePlayerItem(client, "item_defuser");
+	}
+	return Plugin_Continue;
+}
+
+
+public int Native_CheckVip(Handle plugin, int argc)
+{
+	int client = GetNativeCell(1);
+	if (client < 1 || client > MaxClients)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid client index (%d)", client);
+	}
+	if (!IsClientConnected(client))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", client);
+	}
+	return CheckAdminFlag(client, sFlagNeeded);
+}
+
+
+/********************************************************************************************************************************
+                                                              GRABBING MODULE
+                                                              
+                                           (ALL CREDITS TO BARA, STOLEN FROM HIM & SHANAPU FOR HELP)
+                                           					[WORK IN PROGRESS]
+                                                              
+*********************************************************************************************************************************/
+
+
+
+stock void GrabSomething(int client)
+{
+	
+	int ent;
+	float VecPos_Ent[3], VecPos_Client[3];
+	
+	ent = GetObject(client, false);
+	
+	if (ent == -1)
+	{
+		return;
+	}
+	
+	ent = EntRefToEntIndex(ent);
+	
+	if (ent == INVALID_ENT_REFERENCE)
+	{
+		return;
+	}
+	
+	GetEntPropVector(ent, Prop_Send, "m_vecOrigin", VecPos_Ent);
+	GetClientEyePosition(client, VecPos_Client);
+	if (GetVectorDistance(VecPos_Ent, VecPos_Client, false) > 150.0)
+	{
+		return;
+	}
+	
+	char edictname[128];
+	GetEdictClassname(ent, edictname, sizeof(edictname));
+	
+	if (StrContains(edictname, "prop_", false) == -1 || StrContains(edictname, "door", false) != -1)
+	{
+		
+		iGrabbingDeadBody[client] = false;
+		return;
+	}
+	else
+	{
+		if (StrEqual(edictname, "prop_physics") || StrEqual(edictname, "prop_physics_multiplayer") || StrEqual(edictname, "func_physbox")) //Client is moving a prop.
+		{
+			
+			if (IsValidEdict(ent) && IsValidEntity(ent))
+			{
+				ent = ReplacePhysicsEntity(ent);
+				iGrabbingDeadBody[client] = false;
+				SetEntPropEnt(ent, Prop_Data, "m_hPhysicsAttacker", client);
+				SetEntPropFloat(ent, Prop_Data, "m_flLastPhysicsInfluenceTime", GetEngineTime());
+			}
+		}
+	}
+	
+	if (GetEntityMoveType(ent) == MOVETYPE_NONE)
+	{
+		if (strncmp("player", edictname, 5, false) != 0) //Client is moving a dead body
+		{
+			iGrabbingDeadBody[client] = true;
+			SetEntityMoveType(ent, MOVETYPE_VPHYSICS);
+			PrintHintText(client, "Object ist now Unfreezed");
+		}
+		else
+		{
+			iGrabbingDeadBody[client] = false;
+			SetEntityMoveType(ent, MOVETYPE_WALK);
+			return;
+		}
+	}
+	
+	
+	iObject[client] = EntIndexToEntRef(ent);
+	
+	fDistance[client] = GetVectorDistance(VecPos_Ent, VecPos_Client, false);
+	
+	if ((cv_iGrab.IntValue == 1 && iGrabbingDeadBody[client]) || (cv_iGrab.IntValue == 2))
+	{
+		float position[3];
+		TeleportEntity(ent, NULL_VECTOR, NULL_VECTOR, position);
+	}
+	
+}
+
+
+
+
+//Stocks
+stock void Command_Grab(int client)
+{
+	GrabSomething(client);
+}
+
+stock void Command_UnGrab(int client)
+{
+	if (ValidGrab(client))
+	{
+		char edictname[128];
+		GetEdictClassname(iObject[client], edictname, 128);
+		
+		if (StrEqual(edictname, "prop_physics") || StrEqual(edictname, "prop_physics_multiplayer") || StrEqual(edictname, "func_physbox") || StrEqual(edictname, "prop_physics"))
+		{
+			SetEntPropEnt(iObject[client], Prop_Data, "m_hPhysicsAttacker", 0);
+		}
+	}
+	
+	iObject[client] = -1;
+	fTime[client] = 0.0;
+}
+
+
+stock bool ValidGrab(int client)
+{
+	int obj = iObject[client];
+	if (obj != -1 && IsValidEntity(obj) && IsValidEdict(obj))
+	{
+		return (true);
+	}
+	return (false);
+}
+stock int GetObject(int client, bool hitSelf = true)
+{
+	int ent = -1;
+	
+	if (IsClientInGame(client))
+	{
+		if (ValidGrab(client))
+		{
+			ent = EntRefToEntIndex(iObject[client]);
+			return (ent);
+		}
+		
+		ent = TraceToEntity(client);
+		
+		if (IsValidEntity(ent) && IsValidEdict(ent))
+		{
+			char edictname[64];
+			GetEdictClassname(ent, edictname, 64);
+			if (StrEqual(edictname, "worldspawn"))
+			{
+				if (hitSelf)
+				{
+					ent = client;
+				}
+				else
+				{
+					ent = -1;
+				}
+			}
+		}
+		else
+		{
+			ent = -1;
+		}
+	}
+	
+	return (ent);
+}
+
+public int TraceToEntity(int client)
+{
+	float vecClientEyePos[3], vecClientEyeAng[3];
+	GetClientEyePosition(client, vecClientEyePos);
+	GetClientEyeAngles(client, vecClientEyeAng);
+	
+	TR_TraceRayFilter(vecClientEyePos, vecClientEyeAng, MASK_PLAYERSOLID, RayType_Infinite, TraceASDF, client);
+	
+	if (TR_DidHit(null))
+	{
+		return (TR_GetEntityIndex(null));
+	}
+	
+	return (-1);
+}
+
+public bool TraceASDF(int entity, int mask, any data)
+{
+	return (data != entity);
+}
+
+stock int ReplacePhysicsEntity(int ent)
+{
+	float VecPos_Ent[3], VecAng_Ent[3];
+	
+	char model[128];
+	GetEntPropString(ent, Prop_Data, "m_ModelName", model, 128);
+	GetEntPropVector(ent, Prop_Send, "m_vecOrigin", VecPos_Ent);
+	GetEntPropVector(ent, Prop_Send, "m_angRotation", VecAng_Ent);
+	AcceptEntityInput(ent, "Wake");
+	AcceptEntityInput(ent, "EnableMotion");
+	AcceptEntityInput(ent, "EnableDamageForces");
+	DispatchKeyValue(ent, "physdamagescale", "0.0");
+	
+	TeleportEntity(ent, VecPos_Ent, VecAng_Ent, NULL_VECTOR);
+	SetEntityMoveType(ent, MOVETYPE_VPHYSICS);
+	
+	return (ent);
+}
+
+
+
+public Action Adjust(Handle timer)
+{
+	
+	float vecDir[3];
+	float vecPos[3];
+	float vecPos2[3];
+	float vecVel[3];
+	float viewang[3];
+	
+	for (int i = 1; i <= MaxClients; i++)if (IsPlayerAlive(i))
+	{
+		if (ValidGrab(i))
+		{
+			GetClientEyeAngles(i, viewang);
+			GetAngleVectors(viewang, vecDir, NULL_VECTOR, NULL_VECTOR);
+			GetClientEyePosition(i, vecPos);
+			
+			int color[4];
+			
+			if (bColored)
+			{
+				if (fTime[i] == 0.0 || GetGameTime() < fTime[i])
+				{
+					color[0] = GetRandomInt(0, 255);
+					color[1] = GetRandomInt(0, 255);
+					color[2] = GetRandomInt(0, 255);
+					color[3] = 255;
+				}
+			}
+			else
+			{
+				color[0] = 255;
+				color[1] = 0;
+				color[2] = 0;
+				color[3] = 255;
+			}
+			
+			vecPos2 = vecPos;
+			vecPos[0] += vecDir[0] * fDistance[i];
+			vecPos[1] += vecDir[1] * fDistance[i];
+			vecPos[2] += vecDir[2] * fDistance[i];
+			
+			GetEntPropVector(iObject[i], Prop_Send, "m_vecOrigin", vecDir);
+			
+			TE_SetupBeamPoints(vecPos2, vecDir, iSprite, 0, 0, 0, 0.1, 3.0, 3.0, 10, 0.0, color, 0);
+			TE_SendToAll();
+			
+			fTime[i] = GetGameTime() + 1.0;
+			
+			SubtractVectors(vecPos, vecDir, vecVel);
+			ScaleVector(vecVel, 10.0);
+			
+			TeleportEntity(iObject[i], NULL_VECTOR, NULL_VECTOR, vecVel);
+		}
+	}
+}
+
+public void OnClientDisconnect(int client)
+{
+	iObject[client] = -1;
+	fTime[client] = 0.0;
+}
+
+
+
+public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon)
+{
+	if (!IsClientInGame(client))
+		return Plugin_Continue;
+	
+	#if (VIPMENU != 0)
+	Menu_OnPlayerRunCmd(client, buttons, impulse, vel, angles, weapon);
+	#endif
+	
+	if (!IsClientVip(client))
+		return Plugin_Continue;
+	if (cv_iGrab.IntValue == 0)
+		return Plugin_Continue;
+	
+	if (buttons & IN_JUMP)
+	{
+		if (bBlockJump)
+		{
+			int iEnt = GetEntPropEnt(client, Prop_Send, "m_hGroundEntity");
+			
+			if (iEnt > 0)
+			{
+				char sName[128];
+				GetEdictClassname(iEnt, sName, sizeof(sName));
+				
+				if (StrContains(sName, "prop_", false) == -1 || StrContains(sName, "door", false) != -1)
+				{
+					return Plugin_Continue;
+				}
+				else
+				{
+					if (StrEqual(sName, "prop_physics") || StrEqual(sName, "prop_physics_multiplayer") || StrEqual(sName, "func_physbox") || StrEqual(sName, "prop_physics"))
+					{
+						if (IsValidEdict(iEnt) && IsValidEntity(iEnt))
+						{
+							buttons &= ~IN_JUMP;
+							return Plugin_Changed;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	if (buttons & IN_USE)
+	{
+		if (IsPlayerAlive(client) && !ValidGrab(client))
+		{
+			Command_Grab(client);
+		}
+	}
+	else if (ValidGrab(client))
+	{
+		Command_UnGrab(client);
+	}
+	
+	return Plugin_Continue;
+}

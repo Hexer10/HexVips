@@ -120,8 +120,8 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
-	LoadTranslations("VipBonus.phrares");
-	LoadTranslations("common.phrares");
+	LoadTranslations("VipBonus.phrases");
+	LoadTranslations("common.phrases");
 	//Convars
 	AutoExecConfig_SetFile("VipBonus");
 	AutoExecConfig_SetCreateFile(true);

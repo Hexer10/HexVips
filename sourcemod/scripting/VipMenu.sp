@@ -21,15 +21,10 @@
  */
 
 
-#define Life "#life"
-#define Armour "#armour"
-#define Nade "#nade"
-#define Smoke "#smoke"
-#define Speed "#speed"
-#define Gravity "#gravity"
-#define Regen "#regen"
-#define Bhop "#bhop"
-#define Weap "#weap"
+
+//#include "VipBonus.sp"
+
+
 
 
 
@@ -38,6 +33,23 @@ bool bRegen[MAXPLAYERS + 1] = false;
 bool bBhop[MAXPLAYERS + 1] = false;
 bool bDoubleJump[MAXPLAYERS + 1] = false;
 bool bEnableVipMenu = false;
+bool bUsed[MAXPLAYERS + 1][12];
+/*
+0 - Life
+1 - Armour
+2 - Nade
+3 - Smoke
+4 - CustomNade
+5 - Speed
+6 - Gravity
+7 - Regen
+8 - Bhop
+9 - Double
+10 - Weapon
+11 - Respawn
+*/
+
+
 
 //Handle
 Handle hRegenTimer[MAXPLAYERS + 1];
@@ -46,9 +58,14 @@ Handle hRegenTimer[MAXPLAYERS + 1];
 int iMenuUse[MAXPLAYERS + 1];
 int iDJumped[MAXPLAYERS + 1];
 
+//Bool
+bool bCanRespawn[MAXPLAYERS + 1];
+
 //String
 char sWeapon[64];
 char sMenuName[32];
+
+
 
 //ConVar bool
 ConVar cv_bEnableVipMenu;
@@ -62,6 +79,8 @@ ConVar cv_bMenuSmoke;
 ConVar cv_bMenuBhop;
 ConVar cv_bMenuDobleJump;
 ConVar cv_bMenuCustomNade;
+ConVar cv_bMenuRespawn;
+ConVar cv_bMenuDoubleUses;
 ConVar cv_bStopTimer;
 ConVar cv_bDisableLR;
 
@@ -86,6 +105,7 @@ ConVar cv_iNadeSmoke;
 ConVar cv_iNadeFlashbang;
 ConVar cv_iNadeHE;
 ConVar cv_iCustomNadeTeam;
+ConVar cv_iRespawnTeam;
 
 //ConVar float
 ConVar cv_fHpTimer;
@@ -98,8 +118,10 @@ ConVar cv_sWeapon;
 
 
 
-
-
+public void Menu_AskPluginLoad2()
+{
+	CreateNative("Vip_ResetItems", Native_ResetItems);
+}
 
 public void OnVipMenuStart()
 {
@@ -110,7 +132,8 @@ public void OnVipMenuStart()
 	AutoExecConfig_SetCreateFile(true);
 	cv_bEnableVipMenu = AutoExecConfig_CreateConVar("vip_menu_vipmenu", "1", " 1 - Enable VipMenu. 0 - Disable", 0, true, 0.0, true, 1.0);
 	cv_sVipMenuComm = AutoExecConfig_CreateConVar("vip_menu_vipmenucmds", "vmenu", "Commands to open the Vipmenu (no need of sm_ or ! or /)(separeted by a comma ',')(vipmenu)");
-	cv_iMenuUse = AutoExecConfig_CreateConVar("vip_menu_uses", "1", " Max VipMenu uses per round", 0, true, 0.0, true, 1.0);
+	cv_iMenuUse = AutoExecConfig_CreateConVar("vip_menu_uses", "1", "Max VipMenu uses per round", 0, true, 0.0, true, 1.0);
+	cv_bMenuDoubleUses = AutoExecConfig_CreateConVar("vip_menu_use_once", "1", " 1 - Same item can be used only once. 0 - Same item can be used multiple times");
 	cv_bDisableLR = AutoExecConfig_CreateConVar("vip_menu_disable_lr", "1", "Disable VipMenu in sm_hosties LR", 0, true, 0.0, true, 1.0);
 	cv_bMenuLife = AutoExecConfig_CreateConVar("vip_menu_life", "1", " 1 - Enable VipMenu Life. 0 - Disable ", 0, true, 0.0, true, 1.0);
 	cv_iLifeHP = AutoExecConfig_CreateConVar("vip_menu_life_amount", "50", "Amount +HP");
@@ -122,9 +145,9 @@ public void OnVipMenuStart()
 	cv_fSpeed = AutoExecConfig_CreateConVar("vip_menu_speed_amount", "1.5", "Amount Speed");
 	cv_bMenuNade = AutoExecConfig_CreateConVar("vip_menu_he", "1", " 1 - Enable VipMenu HE Nade. 0 - Disable ", 0, true, 0.0, true, 1.0);
 	cv_bMenuSmoke = AutoExecConfig_CreateConVar("vip_menu_smoke", "1", " 1 - Enable VipMenu Smoke. 0 - Disable ", 0, true, 0.0, true, 1.0);
-	cv_bMenuCustomNade = AutoExecConfig_CreateConVar("vip_menu_customnade", "1", " 1 - Enable CustomNade Life. 0 - Disable ", 0, true, 0.0, true, 1.0);
-	cv_iNadeMolotov = AutoExecConfig_CreateConVar("vip_menu_cn_molotov_amount", "1", "Amount of molotovs for CustomNade", 0, true, 0.0, true, 10.0);
-	cv_iNadeFlashbang = AutoExecConfig_CreateConVar("vip_menu_cn_flash_amount", "1", "Amount of flash for CustomNade", 0, true, 0.0, true, 10.0);
+	cv_bMenuCustomNade = AutoExecConfig_CreateConVar("vip_menu_customnade", "1", " 1 - Enable CustomNade. 0 - Disable ", 0, true, 0.0, true, 1.0);
+	cv_iNadeMolotov = AutoExecConfig_CreateConVar("vip_menu_cn_molotov_amount", "1", "Amount of molotovs for CustomNade.", 0, true, 0.0, true, 10.0);
+	cv_iNadeFlashbang = AutoExecConfig_CreateConVar("vip_menu_cn_flash_amount", "1", "Amount of flash for CustomNade.", 0, true, 0.0, true, 10.0);
 	cv_iNadeHE = AutoExecConfig_CreateConVar("vip_menu_cn_he_amount", "1", "Amount of he for CustomNade", 0, true, 0.0, true, 10.0);
 	cv_iNadeSmoke = AutoExecConfig_CreateConVar("vip_menu_cn_smoke_amount", "1", "Amount of smoke for CustomNade", 0, true, 0.0, true, 10.0);
 	cv_bMenuBhop = AutoExecConfig_CreateConVar("vip_menu_bhop", "1", " 1 - Enable VipMenu Bhop. 0 - Disable ", 0, true, 0.0, true, 1.0);
@@ -135,6 +158,7 @@ public void OnVipMenuStart()
 	cv_fHpTimer = AutoExecConfig_CreateConVar("vip_menu_regen_interval", "1.0", "Regen interval");
 	cv_iRegenHP = AutoExecConfig_CreateConVar("vip_menu_regen_hp", "10", "Regen +HP");
 	cv_bStopTimer = AutoExecConfig_CreateConVar("vip_menu_regen_stop", "0", " 0 - Stop Regen when reached max. 1 - Continue when get lower MaxHP", 0, true, 0.0, true, 1.0);
+	cv_bMenuRespawn = AutoExecConfig_CreateConVar("vip_menu_respawn", "0", " 1 - Enable VipMenu Respawn. 0 - Disable", 0, true, 0.0, true, 1.0);
 	cv_iLifeTeam = AutoExecConfig_CreateConVar("vip_menu_team_life", "3", "Team for use Life. 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
 	cv_iArmourTeam = AutoExecConfig_CreateConVar("vip_menu_team_armour", "3", "Team for use Armour. 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
 	cv_iGravityTeam = AutoExecConfig_CreateConVar("vip_menu_team_gravity", "3", "Team for use Gravity. 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
@@ -146,20 +170,22 @@ public void OnVipMenuStart()
 	cv_iDoubleTeam = AutoExecConfig_CreateConVar("vip_menu_team_doublejump", "3", "Team for use DoubleJump. 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
 	cv_iRegenTeam = AutoExecConfig_CreateConVar("vip_menu_team_regen", "3", "Team for use Regen. 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
 	cv_iWeapTeam = AutoExecConfig_CreateConVar("vip_menu_team_customweapon", "3", "Team for use CustomWeapon. 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
+	cv_iRespawnTeam = AutoExecConfig_CreateConVar("vip_menu_team_respawn", "3", "Team for use Respawn. 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
 	AutoExecConfig_ExecuteFile();
 	AutoExecConfig_CleanFile();
 	
-	cv_sWeapon.GetString(sWeapon, sizeof(sWeapon));
 	
+	HookEvent("player_spawn", Menu_PlayerSpawn);
+	HookEvent("player_death", Menu_PlayerDeath);
+	cv_sWeapon.GetString(sWeapon, sizeof(sWeapon));
 }
 
+/********************************************************************************************************************************
+                                                              COMMANDS
+                                                              
+*********************************************************************************************************************************/
 
-public void Menu_PlayerSpawn(int client)
-{
-	bRegen[client] = false;
-	bBhop[client] = false;
-	bDoubleJump[client] = false;
-}
+
 
 public Action Command_ResMenu(int client, int args)
 {
@@ -196,7 +222,7 @@ public Action Command_ResMenu(int client, int args)
 			CReplyToCommand(client, "%t", "Reseted_Usage_Of", target_list[i]);
 		}
 		
-		ResetVipBonus(target_list[i]);
+		Vip_ResetItems(target_list[i]);
 		
 	}
 	return Plugin_Handled;
@@ -204,33 +230,41 @@ public Action Command_ResMenu(int client, int args)
 
 public Action Command_VipMenu(int client, int args)
 {
-	if (!IsClientVip(client))
+	if (!Vip_IsClientVip(client))
 	{
 		CReplyToCommand(client, "%t %t", "%t", "Prefix", "Not_Vip");
+		return Plugin_Handled;
 	}
-	if (!cv_bEnableVipMenu.BoolValue)
+	else if (!cv_bEnableVipMenu.BoolValue)
 	{
 		CReplyToCommand(client, "%t %t", "Prefix", "Plugin_Disable");
+		return Plugin_Handled;
 	}
 	else if (!IsPlayerAlive(client)) //Alive check
 	{
+		if (bCanRespawn[client])
+		{
+			vrespawnmenu(client);
+			return Plugin_Handled;
+		}
 		CReplyToCommand(client, "%t %t", "Prefix", "Player_Death");
+		return Plugin_Handled;
 	}
 	else if (iMenuUse[client] == cv_iMenuUse.IntValue)
 	{
 		CReplyToCommand(client, "%t %t", "Prefix", "Menu_Already");
+		return Plugin_Handled;
 	}
 	else //Client is valid
 	{
 		vmenu(client);
+		return Plugin_Handled;
 	}
-	
-	return Plugin_Handled;
 }
 
 public void OnConfigsExecuted()
 {
-	//Custom Comm (thx to shanapu)
+	//Custom Comm (forked from shanapu)
 	int iCount = 0;
 	char sCommands[128], sCommandsL[12][32], sCommand[32];
 	cv_sVipMenuComm.GetString(sCommands, sizeof(sCommands));
@@ -242,25 +276,13 @@ public void OnConfigsExecuted()
 		Format(sCommand, sizeof(sCommand), "sm_%s", sCommandsL[i]);
 		if (GetCommandFlags(sCommand) == INVALID_FCVAR_FLAGS) // if command not already exist
 		{
-			RegConsoleCmd(sCommand, Command_VipMenu, "Allows the Admin or Warden to set catch as next round");
+			RegConsoleCmd(sCommand, Command_VipMenu, "Opens VipMenu");
 		}
 	}
 	
 }
 
 
-public void ResetVipBonus(int client)
-{
-	iMenuUse[client] = 0;
-	bRegen[client] = false;
-	bBhop[client] = false;
-	bDoubleJump[client] = false;
-	if (hRegenTimer[client] != INVALID_HANDLE)
-	{
-		KillTimer(hRegenTimer[client]);
-		hRegenTimer[client] = INVALID_HANDLE;
-	}
-}
 
 
 /********************************************************************************************************************************
@@ -268,59 +290,100 @@ public void ResetVipBonus(int client)
                                                               
 *********************************************************************************************************************************/
 
+
+void vrespawnmenu(int client)
+{
+	Menu menu = CreateMenu(hRespawnMenu, MENU_ACTIONS_ALL);
+	Format(sMenuName, sizeof(sMenuName), "%t", "Menu_Title");
+	menu.SetTitle(sMenuName);
+	AddMenuItemFormat(menu, "Respawn", ITEMDRAW_DEFAULT, "%t", "Menu_Respawn");
+	menu.ExitButton = true;
+	menu.Display(client, MENU_TIME_FOREVER);
+}
+
+public int hRespawnMenu(Handle menu, MenuAction action, int client, int param2) //MENU HANDLER
+{
+	if (action == MenuAction_Select)
+	{
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (i != client)
+			{
+				PrintToChat(i, "%t %t", "Prefix", "Vip_Respawn_All", client);
+			}
+		}
+		PrintToChat(client, "%t %t", "Prefix", "Vip_Respawn");
+		CS_RespawnPlayer(client);
+	}
+	else if (action == MenuAction_End)
+	{
+		delete menu;
+	}
+	
+}
 void vmenu(int client) //MENU
 {
 	Menu menu = CreateMenu(hMenu, MENU_ACTIONS_ALL);
-	
 	Format(sMenuName, sizeof(sMenuName), "%t", "Menu_Title");
 	menu.SetTitle(sMenuName);
+	
+	if (cv_bMenuDoubleUses)
+	{
+		for (int i = 0; i < sizeof(bUsed[]); i++)
+		{
+			bUsed[client][i] = false;
+		}
+	}
+	
 	if (cv_bMenuLife.BoolValue && IsValidTeam(client, cv_iLifeTeam.IntValue))
 	{
-		AddMenuItemFormat(menu, "Life", ITEMDRAW_DEFAULT, "%t", "Menu_Life");
-		
+		AddMenuItemFormat(menu, "Life", bUsed[client][0] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT, "%t", "Menu_Life");
 	}
 	if (cv_bMenuArmour.BoolValue && IsValidTeam(client, cv_iArmourTeam.IntValue))
 	{
-		AddMenuItemFormat(menu, "Armour", ITEMDRAW_DEFAULT, "%t", "Menu_Armour");
+		AddMenuItemFormat(menu, "Armour", bUsed[client][1] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT, "%t", "Menu_Armour");
 	}
+	
 	if (cv_bMenuNade.BoolValue && IsValidTeam(client, cv_iNadeTeam.IntValue))
 	{
-		AddMenuItemFormat(menu, "Nade", ITEMDRAW_DEFAULT, "%t", "Menu_Granade");
+		AddMenuItemFormat(menu, "Nade", bUsed[client][2] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT, "%t", "Menu_Granade");
 	}
+	
 	if (cv_bMenuSmoke.BoolValue && IsValidTeam(client, cv_iSmokeTeam.IntValue))
 	{
-		AddMenuItemFormat(menu, "Smoke", ITEMDRAW_DEFAULT, "%t", "Menu_Smoke");
+		AddMenuItemFormat(menu, "Smoke", bUsed[client][3] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT, "%t", "Menu_Smoke");
 	}
 	if (cv_bMenuCustomNade.BoolValue && IsValidTeam(client, cv_iCustomNadeTeam.IntValue))
 	{
-		AddMenuItemFormat(menu, "CustomNade", ITEMDRAW_DEFAULT, "%t", "Menu_CustomNade");
+		AddMenuItemFormat(menu, "CustomNade", bUsed[client][4] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT, "%t", "Menu_CustomNade");
 	}
 	if (cv_bMenuSpeed.BoolValue && IsValidTeam(client, cv_iSpeedTeam.IntValue))
 	{
-		AddMenuItemFormat(menu, "Speed", ITEMDRAW_DEFAULT, "%t", "Menu_Speed");
+		AddMenuItemFormat(menu, "Speed", bUsed[client][5] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT, "%t", "Menu_Speed");
 	}
 	if (cv_bMenuGravity.BoolValue && IsValidTeam(client, cv_iGravityTeam.IntValue))
 	{
-		AddMenuItemFormat(menu, "Gravity", ITEMDRAW_DEFAULT, "%t", "Menu_Gravity");
+		AddMenuItemFormat(menu, "Gravity", bUsed[client][6] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT, "%t", "Menu_Gravity");
 	}
 	if (cv_bMenuRegen.BoolValue && IsValidTeam(client, cv_iRegenTeam.IntValue))
 	{
-		AddMenuItemFormat(menu, "Regen", ITEMDRAW_DEFAULT, "%t", "Menu_Regen");
+		AddMenuItemFormat(menu, "Regen", bUsed[client][7] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT, "%t", "Menu_Regen");
 	}
-	
-	if (cv_bMenuBhop.BoolValue && IsValidTeam(client, cv_iBhopTeam.IntValue))
+	if (cv_bMenuBhop.BoolValue && IsValidTeam(client, cv_iBhopTeam.IntValue) && !cv_bAlwaysBhop.BoolValue)
 	{
-		AddMenuItemFormat(menu, "Bhop", ITEMDRAW_DEFAULT, "%t", "Menu_Bhop");
+		AddMenuItemFormat(menu, "Bhop", bUsed[client][8] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT, "%t", "Menu_Bhop");
 	}
-	
 	if (cv_bMenuDobleJump.BoolValue && IsValidTeam(client, cv_iDoubleTeam.IntValue))
 	{
-		AddMenuItemFormat(menu, "Double", ITEMDRAW_DEFAULT, "%t", "Menu_DoubleJump");
+		AddMenuItemFormat(menu, "Double", bUsed[client][9] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT, "%t", "Menu_DoubleJump");
 	}
-	
 	if (!StrEqual(sWeapon, "none", false) && IsValidTeam(client, cv_iWeapTeam.IntValue))
 	{
-		AddMenuItemFormat(menu, "Weap", ITEMDRAW_DEFAULT, "%t", "Menu_Weapon");
+		AddMenuItemFormat(menu, "Weap", bUsed[client][10] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT, "%t", "Menu_Weapon");
+	}
+	if (cv_bMenuRespawn.BoolValue && IsValidTeam(client, cv_iRespawnTeam.IntValue))
+	{
+		AddMenuItemFormat(menu, "Respawn", bUsed[client][11] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT, "%t", "Menu_Respawn");
 	}
 	
 	menu.ExitButton = true;
@@ -336,65 +399,87 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 		GetMenuItem(menu, param2, info, sizeof(info));
 		if (strcmp(info, "Life") == 0)
 		{
+			Forward_OnPlayerUseMenu(client, info);
 			CPrintToChat(client, "%t %t", "Prefix", "Get_Life");
 			int iClientHealth = GetClientHealth(client);
+			if (iClientHealth < 100)
+				iClientHealth = iClientHealth + (100 - iClientHealth);
 			SetEntProp(client, Prop_Send, "m_iHealth", cv_iLifeHP.IntValue + iClientHealth);
 			iMenuUse[client]++;
+			bUsed[client][0] = true;
 		}
-		if (strcmp(info, "Armour") == 0)
+		else if (strcmp(info, "Armour") == 0)
 		{
+			Forward_OnPlayerUseMenu(client, info);
 			CPrintToChat(client, "%t %t", "Prefix", "Get_Armour");
 			SetEntProp(client, Prop_Send, "m_ArmorValue", cv_iArmour.IntValue);
 			iMenuUse[client]++;
+			bUsed[client][1] = true;
 		}
-		if (strcmp(info, "Nade") == 0)
+		else if (strcmp(info, "Nade") == 0)
 		{
+			Forward_OnPlayerUseMenu(client, info);
 			CPrintToChat(client, "%t %t", "Prefix", "Get_Nade");
 			GivePlayerItem(client, "weapon_hegrenade");
 			iMenuUse[client]++;
+			bUsed[client][2] = true;
 		}
-		if (strcmp(info, "Smoke") == 0)
+		else if (strcmp(info, "Smoke") == 0)
 		{
+			Forward_OnPlayerUseMenu(client, info);
 			CPrintToChat(client, "%t %t", "Prefix", "Get_Smoke");
 			GivePlayerItem(client, "weapon_smokegrenade");
 			iMenuUse[client]++;
+			bUsed[client][3] = true;
 		}
-		if (strcmp(info, "Speed") == 0)
+		else if (strcmp(info, "Speed") == 0)
 		{
+			Forward_OnPlayerUseMenu(client, info);
 			CPrintToChat(client, "%t %t", "Prefix", "Get_Speed");
-			SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", cv_fSpeed.FloatValue);
+			SetEntitySpeed(client, cv_fSpeed.FloatValue);
 			iMenuUse[client]++;
+			bUsed[client][4] = true;
 		}
-		if (strcmp(info, "Gravity") == 0)
+		else if (strcmp(info, "Gravity") == 0)
 		{
+			Forward_OnPlayerUseMenu(client, info);
 			CPrintToChat(client, "%t %t", "Prefix", "Get_Gravity");
 			SetEntityGravity(client, cv_fGravity.FloatValue);
 			iMenuUse[client]++;
+			bUsed[client][5] = true;
 		}
-		if (strcmp(info, "Regen") == 0)
+		else if (strcmp(info, "Regen") == 0)
 		{
+			Forward_OnPlayerUseMenu(client, info);
 			CPrintToChat(client, "%t %t", "Prefix", "Get_Regen");
 			bRegen[client] = true;
 			hRegenTimer[client] = CreateTimer(cv_fHpTimer.FloatValue, Timer_Regen, client, TIMER_REPEAT);
 			iMenuUse[client]++;
+			bUsed[client][6] = true;
 		}
-		if (strcmp(info, "Bhop") == 0)
+		else if (strcmp(info, "Bhop") == 0)
 		{
+			Forward_OnPlayerUseMenu(client, info);
 			CPrintToChat(client, "%t %t", "Prefix", "Get_Bhop");
 			bBhop[client] = true;
 			iMenuUse[client]++;
+			bUsed[client][7] = true;
 		}
 		
 		else if (strcmp(info, "Double") == 0)
 		{
+			Forward_OnPlayerUseMenu(client, info);
 			CPrintToChat(client, "%t %t", "Prefix", "Get_DoubleJump");
 			bDoubleJump[client] = true;
 			iMenuUse[client]++;
+			bUsed[client][8] = true;
 		}
 		
-		if (strcmp(info, "CustomNade") == 0)
+		else if (strcmp(info, "CustomNade") == 0)
 		{
+			Forward_OnPlayerUseMenu(client, info);
 			iMenuUse[client]++;
+			bUsed[client][9] = true;
 			if (cv_iNadeMolotov.IntValue != 0)
 			{
 				GivePlayerWeaponAndAmmo(client, "weapon_molotov", 1, cv_iNadeMolotov.IntValue);
@@ -413,9 +498,11 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 			}
 		}
 		
-		if (strcmp(info, "Weap") == 0)
+		else if (strcmp(info, "Weap") == 0)
 		{
+			Forward_OnPlayerUseMenu(client, info);
 			iMenuUse[client]++;
+			bUsed[client][10] = true;
 			if (StrContains(sWeapon, "weapon_", true))
 			{
 				Format(sWeapon, sizeof(sWeapon), "weapon_%s", sWeapon);
@@ -423,51 +510,71 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 			
 			if (GivePlayerItem(client, sWeapon) == -1)
 			{
-				PrintToChat(client, "[SM]Error occured while giving the weapons, contact an administrator please. Error: Invalid Item name/i");
-				PrintToConsole(client, "[VipBonuses]Invalid Item name/id");
+				PrintToChat(client, "[SM]Error occured while giving the weapons, contact an administrator please. Error: Invalid Item name/id");
 				iMenuUse[client]--;
 				ThrowError("[VIPBONUS] Error occured while giving %s to %n, INVALID ITEM ID/NAME", sWeapon, client);
 			}
 			else
-				PrintToChat(client, "%t %t", "Prefix", "Get_Weapon");
+				CPrintToChat(client, "%t %t", "Prefix", "Get_Weapon");
 			
 		}
 		
-		/*	if (strcmp(info, "Respawn") == 0)
+		else if (strcmp(info, "Respawn") == 0)
 		{
-			
-		}*/
-		else if (action == MenuAction_End)
-		{
-			delete menu;
+			Forward_OnPlayerUseMenu(client, info);
+			iMenuUse[client]++;
+			bUsed[client][11] = true;
+			bCanRespawn[client] = true;
+			CPrintToChat(client, "%t %t", "Prefix", "Get_Respawn");
 		}
+		
+		else
+		{
+			PrintToChat(client, "[SM] There was an errror, contanct an administrator please!");
+		}
+	}
+	else if (action == MenuAction_End)
+	{
+		delete menu;
 	}
 }
 
+
+/********************************************************************************************************************************
+                                                              EVENTS
+                                                              
+*********************************************************************************************************************************/
 
 public void OnAvailableLR(int Announced) //DISABLE ITEMS ON LASTREQEST
 {
 	if (cv_bDisableLR.BoolValue)
 	{
-		for (int client = 0; client <= MaxClients; client++)
+		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (IsPlayerAlive(client))
+			if (IsValidClient(i, true, false))
 			{
-				iMenuUse[client] = 0;
-				bRegen[client] = false;
-				bBhop[client] = false;
-				if (hRegenTimer[client] != INVALID_HANDLE)
-				{
-					KillTimer(hRegenTimer[client]);
-					hRegenTimer[client] = INVALID_HANDLE;
-				}
+				Vip_ResetItems(i);
+				bEnableVipMenu = true;
+				cv_bEnableVipMenu.BoolValue = false;
 			}
 		}
 	}
 }
 
+public void Menu_PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
+{
+	int client = GetClientOfUserId(event.GetInt("userid"));
+	iMenuUse[client] = 0;
+	bRegen[client] = false;
+	bBhop[client] = false;
+	bDoubleJump[client] = false;
+	
+	delete hRegenTimer[client];
+	
+}
 
-public Action Menu_OnPlayerRunCmd(int client, int buttons, int impulse, float vel[3], float angles[3], int weapon) //DoubleJump & Bhop forked from shanapu!
+
+public Action Menu_OnPlayerRunCmd(int client, int buttons) //DoubleJump & Bhop forked from shanapu!
 {
 	int water = GetEntProp(client, Prop_Data, "m_nWaterLevel");
 	
@@ -549,6 +656,49 @@ public Action Menu_OnPlayerRunCmd(int client, int buttons, int impulse, float ve
 }
 
 
+
+
+
+public void EnableVipMenuEDays() //RESET BOOLS ON ROUNDSTART AFTER EVENTDAY
+{
+	if (bEnableVipMenu)
+	{
+		bEnableVipMenu = false;
+		cv_bEnableVipMenu.BoolValue = true;
+	}
+	
+	if (cv_DisableOnEventday.BoolValue)
+	{
+		if (bIsMYJBAvaible)
+		{
+			if (MyJailbreak_IsEventDayRunning() && cv_bEnableVipMenu.BoolValue)
+			{
+				
+				bEnableVipMenu = true;
+				cv_bEnableVipMenu.BoolValue = false;
+				return;
+			}
+		}
+	}
+}
+
+public void Menu_PlayerDeath(Event event, const char[] name, bool dontBroadcast) //HP ON KILL
+{
+	int client = GetClientOfUserId(event.GetInt("userid"));
+	if (bCanRespawn[client])
+	{
+		CPrintToChat(client, "%t %t", "Prefix", "Can_Respawn");
+	}
+	delete hRegenTimer[client];
+}
+
+
+
+/********************************************************************************************************************************
+                                                              TIMERS
+                                                              
+*********************************************************************************************************************************/
+
 public Action Timer_Regen(Handle timer, any client)
 {
 	int iHealth = GetClientHealth(client);
@@ -578,27 +728,12 @@ public Action Timer_Regen(Handle timer, any client)
 }
 
 
-public void EnableVipMenuEDays() //RESET BOOLS ON ROUNDSTART AFTER EVENTDAY
+
+
+void Forward_OnPlayerUseMenu(int client, char[] item)
 {
-	if (bEnableVipMenu)
-	{
-		bEnableVipMenu = false;
-		cv_bEnableVipMenu.BoolValue = true;
-	}
-	
-	if (cv_DisableOnEventday.BoolValue)
-	{
-		if (bIsMYJBAvaible)
-		{
-			if (MyJailbreak_IsEventDayRunning() && cv_bEnableVipMenu.BoolValue)
-			{
-				
-				bEnableVipMenu = true;
-				cv_bEnableVipMenu.BoolValue = false;
-				return;
-			}
-		}
-	}
-}
-
-
+	Call_StartForward(fOnPlayerUseMenu);
+	Call_PushCell(client);
+	Call_PushString(item);
+	Call_Finish();
+} 

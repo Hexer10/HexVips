@@ -453,7 +453,7 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 			Forward_OnPlayerUseMenu(client, info);
 			CPrintToChat(client, "%t %t", "Prefix", "Get_Regen");
 			bRegen[client] = true;
-			hRegenTimer[client] = CreateTimer(cv_fHpTimer.FloatValue, Timer_Regen, client, TIMER_REPEAT);
+			hRegenTimer[client] = CreateTimer(cv_fHpTimer.FloatValue, Timer_Regen, GetClientUserId(client), TIMER_REPEAT);
 			iMenuUse[client]++;
 			bUsed[client][6] = true;
 		}
@@ -482,19 +482,19 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 			bUsed[client][9] = true;
 			if (cv_iNadeMolotov.IntValue != 0)
 			{
-				GivePlayerWeaponAndAmmo(client, "weapon_molotov", 1, cv_iNadeMolotov.IntValue);
+				GivePlayerItemAmmo(client, "weapon_molotov", 1, cv_iNadeMolotov.IntValue);
 			}
 			if (cv_iNadeFlashbang.IntValue != 0)
 			{
-				GivePlayerWeaponAndAmmo(client, "weapon_flashbang", 1, cv_iNadeFlashbang.IntValue);
+				GivePlayerItemAmmo(client, "weapon_flashbang", 1, cv_iNadeFlashbang.IntValue);
 			}
 			if (cv_iNadeHE.IntValue != 0)
 			{
-				GivePlayerWeaponAndAmmo(client, "weapon_hegrenade", 1, cv_iNadeHE.IntValue);
+				GivePlayerItemAmmo(client, "weapon_hegrenade", 1, cv_iNadeHE.IntValue);
 			}
 			if (cv_iNadeSmoke.IntValue != 0)
 			{
-				GivePlayerWeaponAndAmmo(client, "weapon_smokegrenade", 1, cv_iNadeSmoke.IntValue);
+				GivePlayerItemAmmo(client, "weapon_smokegrenade", 1, cv_iNadeSmoke.IntValue);
 			}
 		}
 		
@@ -569,7 +569,8 @@ public void Menu_PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 	bBhop[client] = false;
 	bDoubleJump[client] = false;
 	
-	delete hRegenTimer[client];
+	if (hRegenTimer[client] != null) //Timer never get used
+		StopTimer(hRegenTimer[client]);
 	
 }
 
@@ -689,7 +690,7 @@ public void Menu_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 	{
 		CPrintToChat(client, "%t %t", "Prefix", "Can_Respawn");
 	}
-	delete hRegenTimer[client];
+	StopTimer(hRegenTimer[client]);
 }
 
 
@@ -699,8 +700,11 @@ public void Menu_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
                                                               
 *********************************************************************************************************************************/
 
-public Action Timer_Regen(Handle timer, any client)
+public Action Timer_Regen(Handle timer, any userid)
 {
+	int client = GetClientOfUserId(userid);
+	if (client == 0)
+		return Plugin_Stop;
 	int iHealth = GetClientHealth(client);
 	if (IsValidClient(client))
 	{

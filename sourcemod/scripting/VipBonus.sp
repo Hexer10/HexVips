@@ -170,11 +170,10 @@ public void OnPluginStart()
 	HookEvent("player_spawn", Event_CheckTag);
 	HookEvent("player_death", Event_CheckTag);
 	HookEvent("round_start", Event_CheckTag);
+	
 	if (bLateLoad)
-	{
 		for (int i = 1; i <= MaxClients; i++)if (IsClientInGame(i))
-			OnClientPutInServer(i);
-	}
+		OnClientPutInServer(i);
 	
 	//Misc
 	cv_sFlagNeeded.GetString(sFlagNeeded, sizeof(sFlagNeeded));
@@ -252,7 +251,7 @@ public void OnClientPostAdminCheck(int client)
 
 public void Event_CheckTag(Event event, const char[] name, bool dontBroadcast)
 {
-	for (int i = 1; i <= MaxClients; i++)if (IsValidClient(i, false, true) && Vip_IsClientVip(i) && !CheckCommandAccess(i, "vip_allow_admin_tag", ADMFLAG_ROOT, true))
+	for (int i = 1; i <= MaxClients; i++)if (IsClientInGame(i) && Vip_IsClientVip(i) && !CheckCommandAccess(i, "vip_allow_admin_tag", ADMFLAG_ROOT, true))
 	{
 		CreateTimer(1.0, DelayCheck, i);
 	}
@@ -350,7 +349,7 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
 		{
 			ReplaceString(sDamageReduction, sizeof(sDamageReduction), "%", "", false);
 			int iDamageReduction = StringToInt(sDamageReduction);
-			damage -= view_as<int>(damage) % iDamageReduction;
+			damage -= damage / 100 * iDamageReduction;
 			return Plugin_Changed;
 		}
 		else
@@ -374,7 +373,7 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 		if (cv_iNoFall.IntValue == 0)
 			return Plugin_Continue;
 		
-		damage -= view_as<int>(damage) % cv_iNoFall.IntValue;
+		damage -= damage / 100 * cv_iNoFall.IntValue;
 		return Plugin_Changed;
 	}
 	return Plugin_Continue;
@@ -529,7 +528,9 @@ public int Native_ResetItems(Handle plugin, int argc)
 	bRegen[client] = false;
 	bBhop[client] = false;
 	bDoubleJump[client] = false;
-	delete hRegenTimer[client];
+	StopTimer(hRegenTimer[client]);
 	return 1;
 }
 #endif
+
+

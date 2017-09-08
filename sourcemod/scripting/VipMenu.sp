@@ -52,14 +52,14 @@ bool bUsed[MAXPLAYERS + 1][12];
 
 
 //Handle
-Handle hRegenTimer[MAXPLAYERS + 1];
+Handle hRegenTimer[MAXPLAYERS + 1] = null;
 
 //Int
-int iMenuUse[MAXPLAYERS + 1];
-int iDJumped[MAXPLAYERS + 1];
+int iMenuUse[MAXPLAYERS + 1] = 0;
+int iDJumped[MAXPLAYERS + 1] = 0;
 
 //Bool
-bool bCanRespawn[MAXPLAYERS + 1];
+bool bCanRespawn[MAXPLAYERS + 1] = false;
 
 //String
 char sWeapon[64];
@@ -68,44 +68,44 @@ char sMenuName[32];
 
 
 //ConVar bool
-ConVar cv_bEnableVipMenu;
-ConVar cv_bMenuLife;
-ConVar cv_bMenuGravity;
-ConVar cv_bMenuArmour;
-ConVar cv_bMenuRegen;
-ConVar cv_bMenuSpeed;
-ConVar cv_bMenuNade;
-ConVar cv_bMenuSmoke;
-ConVar cv_bMenuBhop;
-ConVar cv_bMenuDobleJump;
-ConVar cv_bMenuCustomNade;
-ConVar cv_bMenuRespawn;
-ConVar cv_bMenuDoubleUses;
-ConVar cv_bStopTimer;
-ConVar cv_bDisableLR;
+ConVar cv_bEnableVipMenu = null;
+ConVar cv_bMenuLife = null;
+ConVar cv_bMenuGravity = null;
+ConVar cv_bMenuArmour = null;
+ConVar cv_bMenuRegen = null;
+ConVar cv_bMenuSpeed = null;
+ConVar cv_bMenuNade = null;
+ConVar cv_bMenuSmoke = null;
+ConVar cv_bMenuBhop = null;
+ConVar cv_bMenuDobleJump = null;
+ConVar cv_bMenuCustomNade = null;
+ConVar cv_bMenuRespawn = null;
+ConVar cv_bMenuDoubleUses = null;
+ConVar cv_bStopTimer = null;
+ConVar cv_bDisableLR = null;
 
 //ConVar int
-ConVar cv_iRegenMaxHP;
-ConVar cv_iRegenHP;
-ConVar cv_iLifeHP;
-ConVar cv_iArmour;
-ConVar cv_iMenuUse;
-ConVar cv_iLifeTeam;
-ConVar cv_iArmourTeam;
-ConVar cv_iGravityTeam;
-ConVar cv_iSpeedTeam;
-ConVar cv_iNadeTeam;
-ConVar cv_iSmokeTeam;
-ConVar cv_iRegenTeam;
-ConVar cv_iBhopTeam;
-ConVar cv_iDoubleTeam;
-ConVar cv_iWeapTeam;
-ConVar cv_iNadeMolotov;
-ConVar cv_iNadeSmoke;
-ConVar cv_iNadeFlashbang;
-ConVar cv_iNadeHE;
-ConVar cv_iCustomNadeTeam;
-ConVar cv_iRespawnTeam;
+ConVar cv_iRegenMaxHP = null;
+ConVar cv_iRegenHP = null;
+ConVar cv_iLifeHP = null;
+ConVar cv_iArmour = null;
+ConVar cv_iMenuUse = null;
+ConVar cv_iLifeTeam = null;
+ConVar cv_iArmourTeam = null;
+ConVar cv_iGravityTeam = null;
+ConVar cv_iSpeedTeam = null;
+ConVar cv_iNadeTeam = null;
+ConVar cv_iSmokeTeam = null;
+ConVar cv_iRegenTeam = null;
+ConVar cv_iBhopTeam  = null;
+ConVar cv_iDoubleTeam = null;
+ConVar cv_iWeapTeam = null;
+ConVar cv_iNadeMolotov = null;
+ConVar cv_iNadeSmoke = null;
+ConVar cv_iNadeFlashbang = null;
+ConVar cv_iNadeHE = null;
+ConVar cv_iCustomNadeTeam = null;
+ConVar cv_iRespawnTeam = null;
 
 //ConVar float
 ConVar cv_fHpTimer;
@@ -569,8 +569,7 @@ public void Menu_PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 	bBhop[client] = false;
 	bDoubleJump[client] = false;
 	
-	if (hRegenTimer[client] != null) //Timer never get used
-		StopTimer(hRegenTimer[client]);
+	StopTimer(hRegenTimer[client]);
 	
 }
 

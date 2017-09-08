@@ -295,7 +295,7 @@ stock int GivePlayerItemAmmo(int client, const char[] weapon, int ammo = -1, int
  * Set ammo account for a weapon
  *
  * @param client			Client Index
- * @param weapon			Weapon INdex
+ * @param weapon			Weapon Index
  * @param clip				Ammo ammount in the clip
  * @param ammo				Total ammo ammount
  * @noreturn
@@ -511,34 +511,45 @@ stock bool AddMenuItemFormat(Handle menu, const char[] info, int style = ITEMDRA
 
 /**
  * 
- * @param LogFile		String to write the LogFile
+ * @param LogFile		Buffer to store the path
  * @param FileName		File to write the log in
- * @param FolderName	Directory/Folder to write the logs in
+ * @param Dir 			Directory/Folder to write the logs in
  * @noreturn
  */
-stock void SetLogFile(char LogFile[PLATFORM_MAX_PATH], char[] FileName, char[] FolderName)
+stock void SetLogFile(char LogFile[PLATFORM_MAX_PATH], char[] FileName, char[] Dir)
 {
 	char sDate[12];
+	char sDir[PLATFORM_MAX_PATH];
+	
+	Format(sDir, sizeof(sDir), "logs/%s", Dir);
+	BuildPath(Path_SM, LogFile, sizeof(LogFile), LogFile);
+	if (!DirExists(sDir))
+		CreateDirectory(sDir, 511);
+	
 	FormatTime(sDate, sizeof(sDate), "%y-%m-%d");
-	Format(LogFile, sizeof(LogFile), "logs/%s/%s-%s.log", FolderName, FileName, sDate);
+	Format(LogFile, sizeof(LogFile), "logs/%s/%s-%s.log", Dir, FileName, sDate);
 	
 	BuildPath(Path_SM, LogFile, sizeof(LogFile), LogFile);
+	
+	
 }
 
 
 /**
  * Kills a Timer and reset its Handle to null
  *
- * @param TimerHandle Timer Handle to kill
+ * @param timer		 Timer Handle to kill
  * @noreturn
  */
-stock void StopTimer(Handle TimerHandle)
+stock void StopTimer(Handle &timer)
 {
-	if (TimerHandle != null)
-		KillTimer(TimerHandle);
-	
-	TimerHandle = null;
+	if (timer != INVALID_HANDLE)
+	{
+		KillTimer(timer);
+		timer = INVALID_HANDLE;
+	}
 }
+
 
 
 

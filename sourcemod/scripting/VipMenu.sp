@@ -52,7 +52,7 @@ bool bUsed[MAXPLAYERS + 1][12];
 
 
 //Handle
-Handle hRegenTimer[MAXPLAYERS + 1] = null;
+Handle hRegenTimer[MAXPLAYERS + 1]; // global handle allready null
 
 //Int
 int iMenuUse[MAXPLAYERS + 1] = 0;
@@ -390,6 +390,7 @@ void vmenu(int client) //MENU
 	menu.Display(client, MENU_TIME_FOREVER);
 }
 
+// ...it is not wise to assume that param1 is client index, it really depends on MenuAction
 public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU HANDLER
 {
 	if (action == MenuAction_Select)
@@ -453,7 +454,19 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 			Forward_OnPlayerUseMenu(client, info);
 			CPrintToChat(client, "%t %t", "Prefix", "Get_Regen");
 			bRegen[client] = true;
-			hRegenTimer[client] = CreateTimer(cv_fHpTimer.FloatValue, Timer_Regen, GetClientUserId(client), TIMER_REPEAT);
+
+			// Just to be sure there not appear multiple timers
+			if (hRegenTimer[client] != null)
+			{
+				KillTimer(hRegenTimer[client]);
+				hRegenTimer[client] = null;
+			}
+
+			DataPack pack;
+			hRegenTimer[client] = CreateDataTimer(cv_fHpTimer.FloatValue, Timer_Regen, pack, TIMER_REPEAT);
+			pack.WriteCell(GetClientUserId(client));
+			pack.WriteCell(client);
+
 			iMenuUse[client]++;
 			bUsed[client][6] = true;
 		}
@@ -573,10 +586,10 @@ public void Menu_PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 	bBhop[client] = false;
 	bDoubleJump[client] = false;
 	
-	if (hRegenTimer[client] != INVALID_HANDLE)
+	if (hRegenTimer[client] != null)
 	{
-		hRegenTimer[client].Close();
-		hRegenTimer[client] = INVALID_HANDLE;
+		KillTimer(hRegenTimer[client]);
+		hRegenTimer[client] = null;
 	}
 	
 }
@@ -698,10 +711,10 @@ public void Menu_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 		CPrintToChat(client, "%t %t", "Prefix", "Can_Respawn");
 	}
 	
-	if (hRegenTimer[client] != INVALID_HANDLE)
+	if (hRegenTimer[client] != null)
 	{
-		hRegenTimer[client].Close();
-		hRegenTimer[client] = INVALID_HANDLE;
+		KillTimer(hRegenTimer[client]);
+		hRegenTimer[client] = null;
 	}
 }
 
@@ -712,35 +725,42 @@ public void Menu_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
                                                               
 *********************************************************************************************************************************/
 
-public Action Timer_Regen(Handle timer, any userid)
+public Action Timer_Regen(Handle timer, Handle pack)
 {
-	int client = GetClientOfUserId(userid);
-	if (!IsValidClient(client, false, false))
-		return Plugin_Continue;
-	int iHealth = GetClientHealth(client);
-	if (IsValidClient(client))
+	int client;
+
+	ResetPack(pack); //Reset pack position
+	client = GetClientOfUserId(ReadPackCell(pack)); // datapack 1st read cell - userid
+
+	if(client == 0) // specific userid has disconnect from server.
 	{
-		if (!bRegen[client])
-			return Plugin_Stop;
-		
-		if (cv_iRegenMaxHP.IntValue > iHealth)
-		{
-			if (bRegen[client])
-			{
-				SetEntityHealth(client, iHealth + cv_iRegenHP.IntValue);
-				return Plugin_Continue;
-			}
-		}
-		
-		if (!cv_bStopTimer.BoolValue)
-			return Plugin_Stop;
-		else
-			return Plugin_Continue;
-	}
-	else
-	{
+		hRegenTimer[ReadPackCell(pack)] = null; // datapack 2nd read cell - client index
 		return Plugin_Stop;
 	}
+
+	// Timer will stop when one of these variables are false
+	if(!bRegen[client] || !cv_bStopTimer.BoolValue)
+	{
+		hRegenTimer[client] = null;
+		return Plugin_Stop;
+	}
+
+	// Not yeat in game or spectating or not alive
+	if (!IsClientInGame(client) || GetClientTeam(client) <= 1 || !IsPlayerAlive(client))
+		return Plugin_Continue;
+
+	// wtf is IsValidClient(client) ? so mystery
+
+
+	int iHealth = GetClientHealth(client);
+
+	if (cv_iRegenMaxHP.IntValue > iHealth)
+	{
+		SetEntityHealth(client, iHealth + cv_iRegenHP.IntValue);
+	}
+	
+
+	return Plugin_Continue;
 }
 
 

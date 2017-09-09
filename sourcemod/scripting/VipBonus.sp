@@ -120,7 +120,7 @@ public Plugin myinfo =
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int max_err)
 {
-	RegPluginLibrary("vipbonus");
+	RegPluginLibrary("VipBonus");
 	CreateNative("Vip_IsClientVip", Native_CheckVip);
 	fOnVipBonusAdded = CreateGlobalForward("Vip_OnBonusSet", ET_Event, Param_Cell);
 	//	fOnVipMenuOpened = CreateGlobalForward("OnVipMEnuOpen", ET_Event, Param_Cell);
@@ -224,7 +224,10 @@ void CheckTag(int client) //HANDLE TAG
 {
 	char sVipTag[32];
 	cv_sVipTag.GetString(sVipTag, sizeof(sVipTag));
-	if (Vip_IsClientVip(client) && !StrEqual(sVipTag, "none", false) && !CheckCommandAccess(client, "root_tag_access", ADMFLAG_ROOT, true))
+	
+	int flags;
+	GetCommandOverride("vip_root_tag", Override_Command, flags);
+	if ((IsValidClient(client, false, true) && !StrEqual(sVipTag, "none", false)) && (Vip_IsClientVip(client) || (GetUserFlagBits(client) & flags == flags)))
 	{
 		if (cv_bVipTag.BoolValue)
 			CS_SetClientClanTag(client, sVipTag);
@@ -234,7 +237,10 @@ void CheckTag(int client) //HANDLE TAG
 			char sNewTag[32];
 			CS_GetClientClanTag(client, sOldTag, sizeof(sOldTag));
 			if (StrContains(sOldTag, sVipTag) != -1)
+			{
 				Format(sNewTag, sizeof(sNewTag), "%s %s", sVipTag, sNewTag);
+				CS_SetClientClanTag(client, sNewTag);
+			}
 		}
 	}
 	
@@ -501,7 +507,7 @@ public int Native_CheckVip(Handle plugin, int argc)
 	{
 		return ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", client);
 	}
-	return CheckAdminFlag(client, sFlagNeeded);
+	return CheckAdminFlagEx(client, sFlagNeeded);
 }
 
 
@@ -528,7 +534,11 @@ public int Native_ResetItems(Handle plugin, int argc)
 	bRegen[client] = false;
 	bBhop[client] = false;
 	bDoubleJump[client] = false;
-	StopTimer(hRegenTimer[client]);
+	if (hRegenTimer[client] != INVALID_HANDLE)
+	{
+		hRegenTimer[client].Close();
+		hRegenTimer[client] = INVALID_HANDLE;
+	}
 	return 1;
 }
 #endif

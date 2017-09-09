@@ -97,7 +97,7 @@ ConVar cv_iSpeedTeam = null;
 ConVar cv_iNadeTeam = null;
 ConVar cv_iSmokeTeam = null;
 ConVar cv_iRegenTeam = null;
-ConVar cv_iBhopTeam  = null;
+ConVar cv_iBhopTeam = null;
 ConVar cv_iDoubleTeam = null;
 ConVar cv_iWeapTeam = null;
 ConVar cv_iNadeMolotov = null;
@@ -564,12 +564,20 @@ public void OnAvailableLR(int Announced) //DISABLE ITEMS ON LASTREQEST
 public void Menu_PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 {
 	int client = GetClientOfUserId(event.GetInt("userid"));
+	
+	if (!IsValidClient(client, false, true))
+		return;
+	
 	iMenuUse[client] = 0;
 	bRegen[client] = false;
 	bBhop[client] = false;
 	bDoubleJump[client] = false;
 	
-	StopTimer(hRegenTimer[client]);
+	if (hRegenTimer[client] != INVALID_HANDLE)
+	{
+		hRegenTimer[client].Close();
+		hRegenTimer[client] = INVALID_HANDLE;
+	}
 	
 }
 
@@ -689,7 +697,12 @@ public void Menu_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 	{
 		CPrintToChat(client, "%t %t", "Prefix", "Can_Respawn");
 	}
-	StopTimer(hRegenTimer[client]);
+	
+	if (hRegenTimer[client] != INVALID_HANDLE)
+	{
+		hRegenTimer[client].Close();
+		hRegenTimer[client] = INVALID_HANDLE;
+	}
 }
 
 
@@ -702,8 +715,8 @@ public void Menu_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 public Action Timer_Regen(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
-	if (client == 0)
-		return Plugin_Stop;
+	if (!IsValidClient(client, false, false))
+		return Plugin_Continue;
 	int iHealth = GetClientHealth(client);
 	if (IsValidClient(client))
 	{

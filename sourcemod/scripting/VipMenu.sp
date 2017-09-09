@@ -756,10 +756,7 @@ public Action Timer_Regen(Handle timer, Handle pack)
 
 	if (cv_iRegenMaxHP.IntValue > iHealth)
 	{
-		if (bRegen[client])
-		{
-			SetEntityHealth(client, iHealth + cv_iRegenHP.IntValue);
-		}
+		SetEntityHealth(client, iHealth + cv_iRegenHP.IntValue);
 	}
 	
 

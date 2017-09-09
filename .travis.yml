@@ -7,15 +7,9 @@ addons:
   apt_packages:
     - lib32stdc++6
 
-#Set the build environment
-env:
-  - SOURCEMOD=1.7
-  - SOURCEMOD=1.8
-  - SOURCEMOD=1.9
-
 #And compile!
 before_script:
-  - wget "http://www.sourcemod.net/latest.php?version=$SOURCEMOD&os=linux" -O game/sourcemod-$SOURCEMOD-linux.tar.gz
+  - wget "http://www.sourcemod.net/latest.php?version=1.8&os=linux" -O game/sourcemod-$SOURCEMOD-linux.tar.gz
   - cd game
   - tar -xzf sourcemod-$SOURCEMOD-linux.tar.gz
   - cd addons/sourcemod/scripting/

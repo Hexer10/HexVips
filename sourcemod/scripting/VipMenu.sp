@@ -459,7 +459,7 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 			if (hRegenTimer[client] != null)
 			{
 				KillTimer(hRegenTimer[client]);
-				delete hRegenTimer[client];
+				hRegenTimer[client] = null;
 			}
 
 			DataPack pack;
@@ -589,7 +589,7 @@ public void Menu_PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 	if (hRegenTimer[client] != null)
 	{
 		KillTimer(hRegenTimer[client]);
-		delete hRegenTimer[client];
+		hRegenTimer[client] = null;
 	}
 	
 }
@@ -714,7 +714,7 @@ public void Menu_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 	if (hRegenTimer[client] != null)
 	{
 		KillTimer(hRegenTimer[client]);
-		delete hRegenTimer[client];
+		hRegenTimer[client] = null;
 	}
 }
 
@@ -734,14 +734,14 @@ public Action Timer_Regen(Handle timer, Handle pack)
 
 	if(client == 0) // specific userid has disconnect from server.
 	{
-		delete hRegenTimer[ReadPackCell(pack)]; // datapack 2nd read cell - client index
+		hRegenTimer[ReadPackCell(pack)] = null; // datapack 2nd read cell - client index
 		return Plugin_Stop;
 	}
 
 	// Timer will stop when one of these variables are false
 	if(!bRegen[client] || !cv_bStopTimer.BoolValue)
 	{
-		delete hRegenTimer[client];
+		hRegenTimer[client] = null;
 		return Plugin_Stop;
 	}
 

@@ -10,7 +10,7 @@ addons:
 language: c
   
 script:
-  - 'bash ci/test.sh; fi'
+  - 'bash ci/test.sh'
 
 notifications:
     email: false

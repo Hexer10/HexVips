@@ -513,11 +513,6 @@ public int Native_CheckVip(Handle plugin, int argc)
 
 
 #if (VIPMENU != 0)
-Action Vip_OnMenuCreated(int client, const char[] item)
-{
-	
-}
-
 public int Native_ResetItems(Handle plugin, int argc)
 {
 	int client = GetNativeCell(1);

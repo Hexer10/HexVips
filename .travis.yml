@@ -1,21 +1,20 @@
-#Use the new container-based infrastructure
-sudo: false
-language: sourcepawn
-
-#Install some apt packages needed for spcomp
 addons:
-  apt_packages:
+  apt:
+    packages:
+    - lftp
+    - lib32z1
     - lib32stdc++6
 
-#And compile!
-before_script:
-  - wget "http://www.sourcemod.net/latest.php?version=1.8&os=linux" -O game/sourcemod-$SOURCEMOD-linux.tar.gz
-  - cd game
-  - tar -xzf sourcemod-$SOURCEMOD-linux.tar.gz
-  - cd addons/sourcemod/scripting/
-  - chmod +x spcomp
+language: sourcepawn
+
+sudo: false
+
+env:
+  - VERSION=1.8
+  - VERSION=1.9
 
 script:
-  - ./compile.sh VipBonus.sp
-  - mkdir ../plugins
-  - mv VipBonus.smx ../plugins
+  - 'bash ci/test.sh; fi'
+
+notifications:
+    email: false

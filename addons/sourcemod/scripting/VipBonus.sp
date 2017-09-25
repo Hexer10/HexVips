@@ -39,15 +39,15 @@
 #include <lastrequest>
 #define REQUIRE_EXTENSIONS
 #define REQUIRE_PLUGIN
+
 //Compiler Options
 #pragma newdecls required
 #pragma semicolon 1
+
+
 //Defines
-
-
-
 #define PLUGIN_AUTHOR "Hexah"
-#define PLUGIN_VER "2.00"
+#define PLUGIN_VERSION "2.00"
 #define DMG_FALL   (1 << 5)
 
 #define VIPMENU 1 //You can remove this without any problems.
@@ -68,16 +68,18 @@ char sDamageBoost[32];
 char sDamageReduction[32];
 
 //Bool
-bool bEnablePlugin = false;
 bool bIsMYJBAvaible = false;
+bool bIsLRAvaible = false;
 bool bLateLoad = false;
 
 //Convars bool
-ConVar cv_DisableOnEventday;
+ConVar cv_bDisableOnEventday;
 ConVar cv_VipJoinMessage;
 ConVar cv_bVipTag;
 ConVar cv_bVipDefuser;
 ConVar cv_bAlwaysBhop;
+ConVar cv_bRootAlways;
+
 
 //ConVars int
 ConVar cv_iVipSpawnHP;
@@ -108,7 +110,7 @@ public Plugin myinfo =
 	name = "VipBonus", 
 	author = PLUGIN_AUTHOR, 
 	description = "Provide some bonuses and VipMenu to VIPs", 
-	version = PLUGIN_VER, 
+	version = PLUGIN_VERSION, 
 	url = "https://github.com/Hexer10/VipMenu-Bonuses"
 };
 
@@ -122,8 +124,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int max_err
 {
 	RegPluginLibrary("VipBonus");
 	CreateNative("Vip_IsClientVip", Native_CheckVip);
-	fOnVipBonusAdded = CreateGlobalForward("Vip_OnBonusSet", ET_Event, Param_Cell);
-	//	fOnVipMenuOpened = CreateGlobalForward("OnVipMEnuOpen", ET_Event, Param_Cell);
+	fOnVipBonusAdded = CreateGlobalForward("Vip_OnBonusSet", ET_Ignore, Param_Cell);
 	#if (VIPMENU != 0)
 	fOnPlayerUseMenu = CreateGlobalForward("Vip_OnPlayerUseMenu", ET_Ignore, Param_Cell, Param_String);
 	Menu_AskPluginLoad2();
@@ -137,27 +138,31 @@ public void OnPluginStart()
 {
 	LoadTranslations("VipBonus.phrases");
 	LoadTranslations("common.phrases");
+	
 	//Convars
+	CreateConVar("vipbonus_version", PLUGIN_VERSION, "VipBonus/Menu Version", FCVAR_NOTIFY | FCVAR_DONTRECORD | FCVAR_SPONLY | FCVAR_REPLICATED);
+	
 	AutoExecConfig_SetFile("VipCore", "VipBonus");
 	AutoExecConfig_SetCreateFile(true);
 	cv_sFlagNeeded = AutoExecConfig_CreateConVar("vip_core_flag", "a", "Flag to have Vip access ( More flags seprated by a comma, a player need to have at least one of them to get Vip access). - none = No flag needed.");
 	cv_VipJoinMessage = AutoExecConfig_CreateConVar("vip_core_join", "1", " 1 - Enable join message. 0 - Disable.");
 	cv_sDamageReduction = AutoExecConfig_CreateConVar("vip_core_damage_reduction", "0", " Amount of damage boost ( Can be % also ). 0 - Disable.");
 	cv_sDamageBoost = AutoExecConfig_CreateConVar("vip_core_damage_booster", "0", " Amount of damage reduction ( Can be % also ). 0 - Disable.");
-	cv_iNoFall = AutoExecConfig_CreateConVar("vip_core_nofall", "100", "% of FallDamage reduction. 0 - Disable.", 0, true, 0.0, true, 100.0);
-	cv_sVipTag = AutoExecConfig_CreateConVar("vip_core_tag", "[VIP]", "Clan Tag for Vips. - none - Disable. ( Check phrares: VipTag message)");
+	cv_iNoFall = AutoExecConfig_CreateConVar("vip_core_nofall", "100", "% of FallDamage reduction. 0 - Disable.", _, true, 0.0, true, 100.0);
+	cv_sVipTag = AutoExecConfig_CreateConVar("vip_core_tag", "[VIP]", "Clan Tag for Vips(Root will never have the tag). - none - Disable.");
 	cv_bVipTag = AutoExecConfig_CreateConVar("vip_core_tag_override", "1", " 0 - Place the tag before the exising. 1 - Override the old tag.");
-	cv_bVipDefuser = AutoExecConfig_CreateConVar("vip_core_defuser", "1", "Give defuse kit to VIP Cts", 0, true, 0.0, true, 1.0);
-	//	cv_iGrab = AutoExecConfig_CreateConVar("vip_core_grag", "1", " 2 - Grab anythink. 1 - Grab only dead bodies. 0 - Disable. ( WIP )");
-	cv_iVipSpawnHP = AutoExecConfig_CreateConVar("vip_core_spawn_hp", "70", "+HP on Spawn. 0 - disable", 0, true, 0.0, false);
-	cv_fVipSpawnArmour = AutoExecConfig_CreateConVar("vip_core_spawn_armour", "70", "+Armour on Spawn. 0 - disabled", 0, true, 0.0, false);
-	cv_iVipKillHp = AutoExecConfig_CreateConVar("vip_core_kill_hp", "25", "+HP HP for kills. 0 - disabled", 0, true, 0.0, false);
-	cv_iVipKillHpHead = AutoExecConfig_CreateConVar("vip_core_kill_hs", "50", "+HP for HS kills. 0 - disabled", 0, true, 0.0, false);
+	cv_bVipDefuser = AutoExecConfig_CreateConVar("vip_core_defuser", "1", "Give defuse kit to VIP Cts", _, true, 0.0, true, 1.0);
+	cv_iVipSpawnHP = AutoExecConfig_CreateConVar("vip_core_spawn_hp", "70", "+HP on Spawn. 0 - disable", _, true, 0.0, false);
+	cv_fVipSpawnArmour = AutoExecConfig_CreateConVar("vip_core_spawn_armour", "100", "+Armour on Spawn. 0 - disabled", 0, true, 0.0, false);
+	cv_iVipKillHp = AutoExecConfig_CreateConVar("vip_core_kill_hp", "25", "+HP HP for kills. 0 - disabled", _, true, 0.0, false);
+	cv_iVipKillHpHead = AutoExecConfig_CreateConVar("vip_core_kill_hs", "50", "+HP for HS kills. 0 - disabled", _, true, 0.0, false);
 	cv_bAlwaysBhop = AutoExecConfig_CreateConVar("vip_core_always_bhop", "1", "1 - Bhop always active. 0 - Should be enable with VipMenu");
-	cv_iCashAmount = AutoExecConfig_CreateConVar("vip_core_round_cash", "500", "+Cash every round start. 0 - disabled", 0, true, 0.0, true, 30000.00);
-	cv_DisableOnEventday = AutoExecConfig_CreateConVar("vip_core_disable_event", "1", "Disable Vip in MYJB EventDays", 0, true, 0.0, true, 1.0);
+	cv_iCashAmount = AutoExecConfig_CreateConVar("vip_core_round_cash", "500", "+Cash every round start. 0 - disabled", _, true, 0.0, true, 30000.00);
+	cv_bDisableOnEventday = AutoExecConfig_CreateConVar("vip_core_disable_event", "1", "Disable Vip in MYJB EventDays", _, true, 0.0, true, 1.0);
+	cv_bRootAlways = AutoExecConfig_CreateConVar("vip_core_root_default", "1", "1 - Users with root (z) have all VipFeatures. 0 - Must have the VIP flag", _, true, 0.0, true, 1.0);
 	AutoExecConfig_ExecuteFile();
 	AutoExecConfig_CleanFile();
+	
 	//OffSet
 	iCash = FindSendPropInfo("CCSPlayer", "m_iAccount");
 	
@@ -185,12 +190,15 @@ public void OnPluginStart()
 	#endif
 }
 
-
 public void OnLibraryAdded(const char[] name)
 {
 	if (StrEqual(name, "myjailbreak"))
 	{
 		bIsMYJBAvaible = true;
+	}
+	else if (StrEqual(name, "lastrequest"))
+	{
+		bIsLRAvaible = true;
 	}
 }
 
@@ -200,11 +208,16 @@ public void OnLibraryRemoved(const char[] name)
 	{
 		bIsMYJBAvaible = false;
 	}
+	else if (StrEqual(name, "lastrequest"))
+	{
+		bIsLRAvaible = false;
+	}
 }
 
 public void OnAllPluginsLoaded()
 {
 	bIsMYJBAvaible = LibraryExists("myjailbreak");
+	bIsLRAvaible = LibraryExists("lastrequest");
 }
 
 
@@ -225,9 +238,7 @@ void CheckTag(int client) //HANDLE TAG
 	char sVipTag[32];
 	cv_sVipTag.GetString(sVipTag, sizeof(sVipTag));
 	
-	int flags;
-	GetCommandOverride("vip_root_tag", Override_Command, flags);
-	if ((IsValidClient(client, false, true) && !StrEqual(sVipTag, "none", false)) && (Vip_IsClientVip(client) || (GetUserFlagBits(client) & flags == flags)))
+	if ((IsValidClient(client, false, true) && !StrEqual(sVipTag, "none", false)) && (CheckAdminFlagEx(client, sFlagNeeded)))
 	{
 		if (cv_bVipTag.BoolValue)
 			CS_SetClientClanTag(client, sVipTag);
@@ -274,12 +285,7 @@ public void Event_CheckTag(Event event, const char[] name, bool dontBroadcast)
 
 public void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast) //VIP BONUSES ON SPAWN & RESET VIP BOOLS (MENU USES)
 {
-	
-	if (!bEnablePlugin)
-		return;
-	
 	int client = GetClientOfUserId(event.GetInt("userid"));
-	
 	
 	OnBonusSet(client);
 	
@@ -289,18 +295,9 @@ public void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast
 
 public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast) //RESET BOOLS ON ROUNDSTART AFTER EVENTDAY
 {
-	#if (VIPMENU != 0)
-	EnableVipMenuEDays();
-	#endif
-	
 	int client = GetClientOfUserId(event.GetInt("userid"));
 	
 	SetEntData(client, iCash, GetEntData(client, iCash) + cv_iCashAmount.IntValue);
-	
-	if (bEnablePlugin)
-	{
-		bEnablePlugin = false;
-	}
 }
 
 public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast) //HP ON KILL
@@ -310,10 +307,17 @@ public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
 	
 	
 	bool headshot = event.GetBool("headshot");
-	if (client == attacker || !IsValidClient(client, true, true) || !IsValidClient(attacker, true, true) || (cv_DisableOnEventday.BoolValue && MyJailbreak_IsEventDayRunning()))
-	{
+	if (client == attacker || !IsValidClient(client, true, true) || !IsValidClient(attacker, true, true))
 		return;
-	}
+	
+	if (bIsMYJBAvaible && cv_bDisableOnEventday.BoolValue)
+		if (MyJailbreak_IsEventDayRunning())
+		return;
+	
+	if (bIsLRAvaible && cv_bDisableLR.BoolValue)
+		if (IsLastRequestAvailable(true))
+		return;
+	
 	if (Vip_IsClientVip(attacker) && cv_iVipKillHp.IntValue >= 1 && headshot)
 	{
 		int iHealth = GetClientHealth(attacker);
@@ -330,7 +334,15 @@ public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
 
 public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &ammotype, int hitbox, int hitgroup)
 {
-	if (!IsValidClient(attacker, true, false) && (victim == attacker) && !Vip_IsClientVip(attacker) || (cv_DisableOnEventday.BoolValue && MyJailbreak_IsEventDayRunning()))
+	if (!IsValidClient(attacker, true, false) && (victim == attacker) && !Vip_IsClientVip(attacker))
+		return Plugin_Continue;
+	
+	if (bIsMYJBAvaible && cv_bDisableOnEventday.BoolValue)
+		if (MyJailbreak_IsEventDayRunning())
+		return Plugin_Continue;
+	
+	if (bIsLRAvaible && cv_bDisableLR.BoolValue)
+		if (IsLastRequestAvailable(true))
 		return Plugin_Continue;
 	
 	if (IsValidClient(victim, true, false) && cv_sDamageBoost.BoolValue)
@@ -339,7 +351,7 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
 		{
 			ReplaceString(sDamageBoost, sizeof(sDamageBoost), "%", "", false);
 			int iDamageBoost = StringToInt(sDamageBoost);
-			damage += view_as<int>(damage) % iDamageBoost;
+			damage += damage / 100 * iDamageBoost;
 			return Plugin_Changed;
 		}
 		else
@@ -421,15 +433,14 @@ public Action OnPlayerRunCmd(int client, int &buttons) //DoubleJump & Bhop forke
 public Action tDelayLife(Handle timer, any client)
 {
 	SetEntProp(client, Prop_Send, "m_ArmorValue", cv_fVipSpawnArmour.IntValue);
-	int i_SpawnHealth = GetClientHealth(client);
-	SetEntityHealth(client, i_SpawnHealth + cv_iVipSpawnHP.IntValue);
+	int iSpawnHealth = GetClientHealth(client);
+	SetEntityHealth(client, iSpawnHealth + cv_iVipSpawnHP.IntValue);
 }
 
 public Action DelayCheck(Handle timer, int i)
 {
 	CheckTag(i);
 }
-
 
 
 /********************************************************************************************************************************
@@ -479,14 +490,13 @@ Action OnBonusSet(int client)
 	Vip_ResetItems(client);
 	#endif
 	
-	if (bIsMYJBAvaible && cv_DisableOnEventday.BoolValue)
-	{
+	if (bIsMYJBAvaible && cv_bDisableOnEventday.BoolValue)
+		if (MyJailbreak_IsEventDayRunning())
 		return Plugin_Handled;
-	}
 	
 	if (cv_iVipSpawnHP.IntValue >= 1 || cv_fVipSpawnArmour.IntValue >= 1)
 	{
-		CreateTimer(3.7, tDelayLife, client, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(3.7, tDelayLife, client, TIMER_FLAG_NO_MAPCHANGE); //Delayed timer so this wont be overrided by other plugins
 	}
 	
 	if (cv_bVipDefuser.BoolValue)
@@ -507,7 +517,10 @@ public int Native_CheckVip(Handle plugin, int argc)
 	{
 		return ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", client);
 	}
-	return CheckAdminFlagEx(client, sFlagNeeded);
+	if (cv_bRootAlways)
+		return CheckAdminFlag(client, sFlagNeeded);
+	else
+		return CheckAdminFlagEx(client, sFlagNeeded);
 }
 
 
@@ -537,5 +550,3 @@ public int Native_ResetItems(Handle plugin, int argc)
 	return 1;
 }
 #endif
-
-

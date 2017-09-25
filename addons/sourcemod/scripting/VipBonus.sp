@@ -29,7 +29,7 @@
 #include <autoexecconfig>
 #include <hexstocks>
 #include <colors>
-#include <VipBonus>
+#include <vipbonus>
 
 //#include <chat-processor>
 

@@ -6,6 +6,8 @@
 #endif
 #define _hexstocks_included
 
+#include <cstrike>
+
 /*
 INCLUDE MERGE OF MYSTOCKS(shanpu)teamgames-stocks/menu-stocks(KissLick) & some other!
 */
@@ -37,7 +39,7 @@ stock bool IsValidClient(int client, bool AllowBots = false, bool AllowDead = fa
 }
 
 /**
- * Checks if user flags
+ * Checks if user flags (Root is always true)
  *
  *
  * @param client			Client Index
@@ -46,12 +48,60 @@ stock bool IsValidClient(int client, bool AllowBots = false, bool AllowDead = fa
  */
 stock bool CheckAdminFlag(int client, const char[] flags)
 {
-	if ((GetUserFlagBits(client) & ReadFlagString(flags) == ReadFlagString(flags)) || (GetUserFlagBits(client) & ADMFLAG_ROOT) || StrEqual(flags, "none"))
+	int iCount = 0;
+	char sflagNeed[22][8], sflagFormat[64];
+	bool bEntitled = false;
+	
+	Format(sflagFormat, sizeof(sflagFormat), flags);
+	ReplaceString(sflagFormat, sizeof(sflagFormat), " ", "");
+	iCount = ExplodeString(sflagFormat, ",", sflagNeed, sizeof(sflagNeed), sizeof(sflagNeed[]));
+	
+	for (int i = 0; i < iCount; i++)
 	{
-		return true;
+		if ((GetUserFlagBits(client) & ReadFlagString(sflagNeed[i]) == ReadFlagString(sflagNeed[i])) || (GetUserFlagBits(client) & ADMFLAG_ROOT))
+		{
+			bEntitled = true;
+			break;
+		}
 	}
-	return false;
+	
+	return bEntitled;
 }
+
+/**
+ * Checks if user flags
+ *
+ *
+ * @param client			Client Index
+ * @param flags				Flags to check, enter comma to separate flags.
+ * @return					True if client has the flags, false otherwise.
+ */
+stock bool CheckAdminFlagEx(int client, const char[] flags)
+{
+	int iCount = 0;
+	char sflagNeed[22][8], sflagFormat[64];
+	bool bEntitled = false;
+	
+	Format(sflagFormat, sizeof(sflagFormat), flags);
+	ReplaceString(sflagFormat, sizeof(sflagFormat), " ", "");
+	iCount = ExplodeString(sflagFormat, ",", sflagNeed, sizeof(sflagNeed), sizeof(sflagNeed[]));
+	
+	for (int i = 0; i < iCount; i++)
+	{
+		if ((GetUserFlagBits(client) & ReadFlagString(sflagNeed[i]) == ReadFlagString(sflagNeed[i])))
+		{
+			bEntitled = true;
+			break;
+		}
+	}
+	
+	return bEntitled;
+}
+
+
+
+
+
 
 /**
  * Get the target client
@@ -62,12 +112,10 @@ stock bool CheckAdminFlag(int client, const char[] flags)
  */
 stock int GetTarget(int client, int argnum)
 {
-	char starget[32];
+	char sTarget[32];
 	
-	GetCmdArg(argnum, starget, sizeof(starget));
-	return target = FindTarget(client, starget);
-	
-	
+	GetCmdArg(argnum, sTarget, sizeof(sTarget));
+	return FindTarget(client, sTarget);
 }
 
 
@@ -96,7 +144,6 @@ stock void CS_SetClientName(int client, const char[] name, bool silent = false)
 		SetEventString(event, "newname", name);
 		FireEvent(event);
 	}
-	
 	if (silent)
 		return;
 	
@@ -118,13 +165,28 @@ stock void CS_SetClientName(int client, const char[] name, bool silent = false)
 /** 
  * Get alive player count of a team
  *
- * @param team			Team
+ * @param team				Team (-1 for total)
+ * @param alive				Count only alive players?
  * @return					Team Count
  */
-stock int GetAliveTeamCount(int team)
+stock int GetAliveTeamCount(int team = -1, bool alive = true)
 {
 	int number = 0;
-	for (int i; i <= MaxClients; i++)if (IsPlayerAlive(i) && GetClientTeam(i) == team)number++;
+	for (int i; i <= MaxClients; i++)if (IsPlayerAlive(i) || !alive) && (GetClientTeam(i) == team || team = -1)
+		number++;
+	return number;
+}
+
+/** 
+ * Get player count 
+ *
+ * @return					Player Count Count
+ */
+stock int GetTotalCount()
+{
+	int number = 0;
+	for (int i; i <= MaxClients; i++)if (IsClientInGame(i))
+		number++;
 	return number;
 }
 
@@ -195,17 +257,18 @@ stock bool IsOdd(int num)
 stock void StripAllPlayerWeapons(int client)
 {
 	int weapon;
-	for (int i = 1; i <= 4; i++)
+	for (int i = 0; i <= 4; i++)
 	{
 		if ((weapon = GetPlayerWeaponSlot(client, i)) != -1)
 		{
-			SDKHooks_DropWeapon(client, weapon, NULL_VECTOR, NULL_VECTOR);
+			RemovePlayerItem(client, weapon);
 			AcceptEntityInput(weapon, "Kill");
 		}
 	}
-	if ((weapon = GetPlayerWeaponSlot(client, CS_SLOT_KNIFE)) != -1) //strip knife slot 2 times for taser
+	
+	if ((weapon = GetPlayerWeaponSlot(client, CS_SLOT_KNIFE)) != -1) // strip knife slot 2 times for taser
 	{
-		SDKHooks_DropWeapon(client, weapon, NULL_VECTOR, NULL_VECTOR);
+		RemovePlayerItem(client, weapon);
 		AcceptEntityInput(weapon, "Kill");
 	}
 }
@@ -217,25 +280,13 @@ stock void StripAllPlayerWeapons(int client)
  * @param weapon			Weapon Name
  * @param clip				Ammo ammount in the clip
  * @param ammo				Total ammo ammount
- * @return					Weapon Index
+ * @return					Entity Index
  */
-stock int GivePlayerWeaponAndAmmo(int client, const char[] weapon, int clip = -1, int ammo = -1)
+stock int GivePlayerItemAmmo(int client, const char[] weapon, int ammo = -1, int clip = -1)
 {
 	int weaponEnt = GivePlayerItem(client, weapon);
 	
-	if (weaponEnt != -1) {
-		if (clip != -1)
-			SetEntProp(weaponEnt, Prop_Send, "m_iClip1", clip);
-		
-		if (ammo != -1) {
-			int iOffset = FindDataMapInfo(client, "m_iAmmo") + (GetEntProp(weaponEnt, Prop_Data, "m_iPrimaryAmmoType") * 4);
-			SetEntData(client, iOffset, ammo, 4, true);
-			
-			if (GetEngineVersion() == Engine_CSGO) {
-				SetEntProp(weaponEnt, Prop_Send, "m_iPrimaryReserveAmmoCount", ammo);
-			}
-		}
-	}
+	SetPlayerWeaponAmmo(client, weaponEnt, clip, ammo);
 	
 	return weaponEnt;
 }
@@ -244,7 +295,7 @@ stock int GivePlayerWeaponAndAmmo(int client, const char[] weapon, int clip = -1
  * Set ammo account for a weapon
  *
  * @param client			Client Index
- * @param weapon			Weapon INdex
+ * @param weapon			Weapon Index
  * @param clip				Ammo ammount in the clip
  * @param ammo				Total ammo ammount
  * @noreturn
@@ -257,11 +308,13 @@ stock void SetPlayerWeaponAmmo(int client, int weaponEnt, int clip = -1, int amm
 	if (clip != -1)
 		SetEntProp(weaponEnt, Prop_Send, "m_iClip1", clip);
 	
-	if (ammo != -1) {
-		int iOffset = FindDataMapOffs(client, "m_iAmmo") + (GetEntProp(weaponEnt, Prop_Data, "m_iPrimaryAmmoType") * 4);
+	if (ammo != -1)
+	{
+		int iOffset = FindDataMapInfo(client, "m_iAmmo") + (GetEntProp(weaponEnt, Prop_Data, "m_iPrimaryAmmoType") * 4);
 		SetEntData(client, iOffset, ammo, 4, true);
 		
-		if (GetEngineVersion() == Engine_CSGO) {
+		if (GetEngineVersion() == Engine_CSGO)
+		{
 			SetEntProp(weaponEnt, Prop_Send, "m_iPrimaryReserveAmmoCount", ammo);
 		}
 	}
@@ -424,25 +477,9 @@ public float GetEntitySpeed(int entity)
 
 /********************************** MISC *********************************/
 
-/**
- * Better Kill of a Timer
- *
- *
- * @param TimerHandler		Handle of the timer
- * @return					Always INVALID_HANDLE
- */
-stock Handle StopTimer(Handle TimerHandle)
-{
-	KillTimer(TimerHandle);
-	if (TimerHandle != INVALID_HANDLE)
-		TimerHandle = INVALID_HANDLE;
-}
-
 /** Reset client Render Color
- * 
  *
- *
- * @param num				Client Index
+ * @param client				Client Index
  * @noreturn
  */
 stock void ResetRenderColor(int client)
@@ -471,6 +508,58 @@ stock bool AddMenuItemFormat(Handle menu, const char[] info, int style = ITEMDRA
 	return AddMenuItem(menu, info, display, style);
 }
 
+
+/**
+ * 
+ * @param LogFile		Buffer to store the path
+ * @param FileName		File to write the log in
+ * @param Dir 			Directory/Folder to write the logs in
+ * @noreturn
+ */
+stock void SetLogFile(char LogFile[PLATFORM_MAX_PATH], char[] FileName, char[] Dir)
+{
+	char sDate[12];
+	char sDir[PLATFORM_MAX_PATH];
+	
+	Format(sDir, sizeof(sDir), "logs/%s", Dir);
+	BuildPath(Path_SM, LogFile, sizeof(LogFile), LogFile);
+	if (!DirExists(sDir))
+		CreateDirectory(sDir, 511);
+	
+	FormatTime(sDate, sizeof(sDate), "%y-%m-%d");
+	Format(LogFile, sizeof(LogFile), "logs/%s/%s-%s.log", Dir, FileName, sDate);
+	
+	BuildPath(Path_SM, LogFile, sizeof(LogFile), LogFile);
+	
+	
+}
+
+
+/**
+ * Kills a Timer and reset its Handle to null
+ *
+ * @param timer		 Timer Handle to kill
+ * @noreturn
+ */
+stock void StopTimer(Handle &timer)
+{
+	if (timer != INVALID_HANDLE)
+	{
+		KillTimer(timer);
+		timer = INVALID_HANDLE;
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
 /** Prints a message to a specific client in the hud area. !WIP!
  * @param client			Client Index.
  * @param message			Message to send
@@ -495,9 +584,21 @@ stock bool AddMenuItemFormat(Handle menu, const char[] info, int style = ITEMDRA
  *
  *
  */
-stock int PrintToHud(int client, const char[] message, float holdtime = 5.0, float x, float y, int red = 255, int green = 255, int blue = 255, int alpha, float fadeIn = 0.2, float fadeOut = 0.1, int channel = -1, float fxTime = 6.0, int effect = 0)
+stock int PrintToHud(int client, const char[] message, float holdtime = 5.0, float x = -1.0, float y = -1.0, int red = 255, int green = 255, int blue = 255, int alpha, float fadeIn = 0.2, float fadeOut = 0.1, int channel = -1, float fxTime = 6.0, int effect = 0, any...)
 {
 	SetHudTextParams(x, y, holdtime, red, green, blue, alpha, 0, fxTime, fadeIn, fadeOut);
 	return ShowHudText(client, channel, message);
 }
 
+
+stock int PrintToHudEx(int client, const char[] message, float x = -1.0, float y = -1.0, float holdtime = 0.2, int color[4] =  { 255, 255, 255, 255 }, int channel = -1, any...)
+{
+	char buffer[256];
+	int colors[4];
+	VFormat(buffer, sizeof(buffer), message, 8);
+	for (int i = 0; i <= 3; i++)
+	{
+		colors[i] = color[i];
+	}
+	PrintToHud(client, buffer, holdtime, x, y, colors[0], colors[1], colors[2], colors[3], 0.2, 0.1, channel);
+}

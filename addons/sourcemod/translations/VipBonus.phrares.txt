@@ -35,11 +35,6 @@
         "en" "You have already used the menu"
     }
     
-    "Menu_Title"
-    {
-        "en" ".::VipMenu::."
-    }
-    
     "Menu_opened"
     {
         "en" "You opened the menu"
@@ -132,7 +127,7 @@
     
     "Get_DoubleJump"
     {
-  "en" "You got DoubleJump"
+      "en" "You got DoubleJump
     }
     "Menu_Weapon"
     {
@@ -144,31 +139,23 @@
         "en" "You got a weapon"
     }
     
-   "Menu_CustomNade"
-   {
+	"Menu_NadeKit"
+	{
         "en" "Custom Nade"
-   }
+	}
    
-   "Get_CustomNade
+	"Get_NadeKit"
     {
         "en" "You got some nades"
     }
-    
-    "Reset_Usage"
-    {
-        #format {1:n}
-        "en" "Your usages was resetted by {1}"
-    }
-    
-    "Reset_Usage_of"
-    {
-        #format {1:n}
-        "en" "You resetted usages of {1}"
-    }
-    
-    "Vip_Joined"
-    {
-        #format "{1:n}"
-        "en" "[VIP]{1} joined in the server!"
-    }
+	
+	"MyJBEvent_Running"
+	{
+		"en" "You cannot use the VipMenu during an eventday!"
+	}
+	
+	"HostiesLR_Active"
+	{
+		"en" "You cannot use the VipMenu during the LR!"
+	}
 }

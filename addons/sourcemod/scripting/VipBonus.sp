@@ -31,7 +31,6 @@
 #include <colors>
 #include <vipbonus>
 
-//#include <chat-processor>
 
 #undef REQUIRE_PLUGIN
 #undef REQUIRE_EXTENSIONS
@@ -79,7 +78,7 @@ ConVar cv_bVipTag;
 ConVar cv_bVipDefuser;
 ConVar cv_bAlwaysBhop;
 ConVar cv_bRootAlways;
-
+ConVar cv_bPluginEnable;
 
 //ConVars int
 ConVar cv_iVipSpawnHP;
@@ -144,6 +143,7 @@ public void OnPluginStart()
 	
 	AutoExecConfig_SetFile("VipCore", "VipBonus");
 	AutoExecConfig_SetCreateFile(true);
+	cv_bPluginEnable = AutoExecConfig_CreateConVar("sm_vipbonus_enable", "1", "1 - Plugin enabled. 0 - Plugin disabled", _, true, 0.0, true, 1.0);
 	cv_sFlagNeeded = AutoExecConfig_CreateConVar("vip_core_flag", "a", "Flag to have Vip access ( More flags seprated by a comma, a player need to have at least one of them to get Vip access). - none = No flag needed.");
 	cv_VipJoinMessage = AutoExecConfig_CreateConVar("vip_core_join", "1", " 1 - Enable join message. 0 - Disable.");
 	cv_sDamageReduction = AutoExecConfig_CreateConVar("vip_core_damage_reduction", "0", " Amount of damage boost ( Can be % also ). 0 - Disable.");
@@ -259,6 +259,8 @@ void CheckTag(int client) //HANDLE TAG
 
 public void OnClientPostAdminCheck(int client)
 {
+	if (!cv_bPluginEnable.BoolValue)
+		return;
 	CheckTag(client);
 	if (Vip_IsClientVip(client) && cv_VipJoinMessage.BoolValue)
 	{
@@ -268,7 +270,9 @@ public void OnClientPostAdminCheck(int client)
 
 public void Event_CheckTag(Event event, const char[] name, bool dontBroadcast)
 {
-	for (int i = 1; i <= MaxClients; i++)if (IsClientInGame(i) && Vip_IsClientVip(i) && !CheckCommandAccess(i, "vip_allow_admin_tag", ADMFLAG_ROOT, true))
+	if (!cv_bPluginEnable.BoolValue)
+		return;
+	for (int i = 1; i <= MaxClients; i++)if (IsClientInGame(i) && Vip_IsClientVip(i))
 	{
 		CreateTimer(1.0, DelayCheck, i);
 	}
@@ -285,6 +289,8 @@ public void Event_CheckTag(Event event, const char[] name, bool dontBroadcast)
 
 public void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast) //VIP BONUSES ON SPAWN & RESET VIP BOOLS (MENU USES)
 {
+	if (!cv_bPluginEnable.BoolValue)
+		return;
 	int client = GetClientOfUserId(event.GetInt("userid"));
 	
 	OnBonusSet(client);
@@ -295,6 +301,9 @@ public void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast
 
 public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast) //RESET BOOLS ON ROUNDSTART AFTER EVENTDAY
 {
+	if (!cv_bPluginEnable.BoolValue)
+		return;
+	
 	int client = GetClientOfUserId(event.GetInt("userid"));
 	
 	SetEntData(client, iCash, GetEntData(client, iCash) + cv_iCashAmount.IntValue);
@@ -302,6 +311,9 @@ public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 
 public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast) //HP ON KILL
 {
+	if (!cv_bPluginEnable.BoolValue)
+		return;
+	
 	int client = GetClientOfUserId(event.GetInt("userid"));
 	int attacker = GetClientOfUserId(event.GetInt("attacker"));
 	
@@ -334,6 +346,9 @@ public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
 
 public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &ammotype, int hitbox, int hitgroup)
 {
+	if (!cv_bPluginEnable.BoolValue)
+		return Plugin_Continue;
+	
 	if (!IsValidClient(attacker, true, false) && (victim == attacker) && !Vip_IsClientVip(attacker))
 		return Plugin_Continue;
 	
@@ -384,6 +399,9 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
 
 public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
+	if (!cv_bPluginEnable.BoolValue)
+		return Plugin_Continue;
+	
 	if (Vip_IsClientVip(victim) && (damagetype & DMG_FALL) && (cv_iNoFall.IntValue >= 1))
 	{
 		if (cv_iNoFall.IntValue == 100)
@@ -399,6 +417,9 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 
 public Action OnPlayerRunCmd(int client, int &buttons) //DoubleJump & Bhop forked from shanapu!
 {
+	if (!cv_bPluginEnable.BoolValue)
+		return Plugin_Continue;
+		
 	#if (VIPMENU != 0)
 	Menu_OnPlayerRunCmd(client, buttons);
 	#endif

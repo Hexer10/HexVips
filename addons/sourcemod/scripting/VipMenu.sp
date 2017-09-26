@@ -230,9 +230,15 @@ public Action Command_ResMenu(int client, int args)
 
 public Action Command_VipMenu(int client, int args)
 {
+	if (!cv_bPluginEnable.BoolValue)
+	{
+		CReplyToCommand(client, "%t %t", "Prefix", "Plugin_Disabled");
+		return Plugin_Handled;
+	}
 	if (!client)
 	{
 		ReplyToCommand(client, "[SM] This command in in-game only!");
+		return Plugin_Handled;
 	}
 	if (!Vip_IsClientVip(client))
 	{

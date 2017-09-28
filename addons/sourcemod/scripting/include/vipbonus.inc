@@ -27,7 +27,7 @@
 
 
 /**
- * Return if a client is VIP or not
+ * Return if a certain player is VIP or not
  * @param client		Client Index.
  *
  * @return 				True if a client has VipAccess, false otherwise.
@@ -35,7 +35,7 @@
 native bool Vip_IsClientVip(int client);
 
 /**
- * Reset all the Vip Items 
+ * Reset all the VipMenu Items of a certain player 
  * @param client		Client Index.
  * @noreturn
  */

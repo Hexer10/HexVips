@@ -35,11 +35,6 @@
         "cze" "Nabidku mate jiz otevrenou"
     }
     
-    "Menu_Title"
-    {
-        "cze" ".::VipMenu::."
-    }
-    
     "Menu_opened"
     {
         "cze" "Otevreli jste menu"
@@ -47,32 +42,32 @@
     
     "Menu_Life"
     {
-        "cze" "Ziskat +HP"
+        "cze" "Ziskat vice zivotu"
     }
     
     "Get_Life"
     {
-        "cze" "Dostali jste vice zivota!"
+        "cze" "Dostali jste vice zivotu!"
     }
     
     "Menu_Armour"
     {
-        "cze" "Ziskat +Armour"
+        "cze" "Ziskat vice armoru"
     }
     
     "Get_Armour"
     {
-        "cze" "Dostali jste vice brneni!"
+        "cze" "Dostali jste vice armoru!"
     }
     
     "Menu_Granade"
     {
-        "cze" "Ziskat granat"
+        "cze" "Ziskat vybusny granat"
     }
     
     "Get_Nade"
     {
-        "cze" "Dostali jste granat"
+        "cze" "Dostali jste vybusny granat"
     }
     
     "Menu_Smoke"
@@ -87,7 +82,7 @@
     
     "Menu_Speed"
     {
-        "cze" "Nastavit +Speed"
+        "cze" "Ziskat vetsi rychlost"
     }
     
     "Get_Speed"
@@ -97,7 +92,7 @@
     
     "Menu_Gravity"
     {
-        "cze" "Nastavit -Gravity"
+        "cze" "Nastavit mensi gravitaci"
     }
     
     "Get_Gravity"
@@ -117,12 +112,12 @@
     
     "Menu_Bhop"
     {
-        "cze" "Nastavit BunnyHop"
+        "cze" "Ziskat BunnyHop"
     }
     
     "Get_Bhop"
     {
-        "cze" "Nastavili jste Auto-BunnyHop"
+        "cze" "Obdrzeli jste Auto-BunnyHop"
     }
     
     "Menu_DoubleJump"
@@ -132,7 +127,7 @@
     
     "Get_DoubleJump"
     {
-      "cze" "Dostali jste DoubleJump"
+      "cze" "Nyni mate DoubleJump"
     }
     "Menu_Weapon"
     {
@@ -143,5 +138,25 @@
     {
         "cze" "Dostali jste zbran"
     }
+    
+    "Menu_NadeKit"
+	{
+        "cze" "Vlastni granat"
+	}
+   
+	"Get_NadeKit"
+    {
+        "cze" "Ziskali jste nejake granaty"
+    }
+	
+	"MyJBEvent_Running"
+	{
+		"cze" "Nelze pouzit VipMenu behem eventu!"
+	}
+	
+	"HostiesLR_Active"
+	{
+		"cze" "Nemuzete pouzit VipMenu behem Posledniho Prani!"
+	}
     
 }

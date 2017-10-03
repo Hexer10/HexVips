@@ -329,7 +329,7 @@ public int hRespawnMenu(Handle menu, MenuAction action, int client, int param2) 
 {
 	if (action == MenuAction_Select)
 	{
-		for (int i = 1; i <= MaxClients; i++)
+		for (int i = 1; i <= MaxClients; i++)if (IsClientInGame(i))
 		{
 			if (i != client)
 			{
@@ -337,6 +337,7 @@ public int hRespawnMenu(Handle menu, MenuAction action, int client, int param2) 
 			}
 		}
 		PrintToChat(client, "%t %t", "Prefix", "Vip_Respawn");
+		bCanRespawn[client] = false;
 		CS_RespawnPlayer(client);
 	}
 	else if (action == MenuAction_End)

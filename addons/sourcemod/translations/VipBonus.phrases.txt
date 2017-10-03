@@ -149,6 +149,21 @@
         "en" "You got some nades"
     }
 	
+	"Menu_Respawn"
+	{
+		"en" "Respawn"
+	}
+	
+	"Get_Respawn"
+	{
+		"en" "You got one respawn!"
+	}
+	
+	"Can_Respawn"
+	{
+		"en" "You can now respawn! Open the VipMenu!"
+	}
+	
 	"MyJBEvent_Running"
 	{
 		"en" "You cannot use the VipMenu during an eventday!"

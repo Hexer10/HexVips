@@ -538,7 +538,7 @@ public int Native_CheckVip(Handle plugin, int argc)
 	{
 		return ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", client);
 	}
-	if (cv_bRootAlways)
+	if (cv_bRootAlways.BoolValue)
 		return CheckAdminFlag(client, sFlagNeeded);
 	else
 		return CheckAdminFlagEx(client, sFlagNeeded);

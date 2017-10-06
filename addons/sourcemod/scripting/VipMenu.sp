@@ -242,7 +242,7 @@ public Action Command_VipMenu(int client, int args)
 	}
 	if (!Vip_IsClientVip(client))
 	{
-		CReplyToCommand(client, "%t %t", "%t", "Prefix", "Not_Vip");
+		CReplyToCommand(client, "%t %t", "Prefix", "Not_Vip");
 		return Plugin_Handled;
 	}
 	if (!cv_bEnableVipMenu.BoolValue)

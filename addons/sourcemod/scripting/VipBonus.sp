@@ -292,7 +292,7 @@ public void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast
 	if (!cv_bPluginEnable.BoolValue)
 		return;
 	int client = GetClientOfUserId(event.GetInt("userid"));
-
+	
 	OnBonusSet(client);
 	
 }
@@ -326,7 +326,7 @@ public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
 	if (bIsMYJBAvaible && cv_bDisableOnEventday.BoolValue)
 		if (MyJailbreak_IsEventDayRunning())
 		return;
-
+	
 	if (bIsLRAvaible && cv_bDisableLR.BoolValue)
 		if (bIsLR)
 		return;
@@ -452,11 +452,17 @@ public Action OnPlayerRunCmd(int client, int &buttons) //DoubleJump & Bhop forke
                                                               
 *********************************************************************************************************************************/
 
-public Action tDelayLife(Handle timer, any client)
+public Action tDelayLife(Handle timer, any iUserId)
 {
+	int client = GetClientOfUserId(iUserId)
+	
+	if (!IsValidClient(client, false, false))
+		return Plugin_Continue;
+	
 	SetEntProp(client, Prop_Send, "m_ArmorValue", cv_fVipSpawnArmour.IntValue);
 	int iSpawnHealth = GetClientHealth(client);
 	SetEntityHealth(client, iSpawnHealth + cv_iVipSpawnHP.IntValue);
+	return Plugin_Continue;
 }
 
 public Action DelayCheck(Handle timer, int i)
@@ -518,7 +524,7 @@ Action OnBonusSet(int client)
 	
 	if (cv_iVipSpawnHP.IntValue >= 1 || cv_fVipSpawnArmour.IntValue >= 1)
 	{
-		CreateTimer(3.7, tDelayLife, client, TIMER_FLAG_NO_MAPCHANGE); //Delayed timer so this wont be overrided by other plugins
+		CreateTimer(3.7, tDelayLife, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE); //Delayed timer so this wont be overrided by other plugins
 	}
 	
 	if (cv_bVipDefuser.BoolValue)

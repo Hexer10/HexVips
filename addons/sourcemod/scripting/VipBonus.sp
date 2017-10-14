@@ -358,7 +358,7 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
 		return Plugin_Continue;
 	
 	if (bIsLRAvaible && cv_bDisableLR.BoolValue)
-		if (IsLastRequestAvailable(true))
+		if (bIsLR)
 		return Plugin_Continue;
 	
 	if (IsValidClient(victim, true, false) && cv_sDamageBoost.BoolValue)
@@ -454,7 +454,7 @@ public Action OnPlayerRunCmd(int client, int &buttons) //DoubleJump & Bhop forke
 
 public Action tDelayLife(Handle timer, any iUserId)
 {
-	int client = GetClientOfUserId(iUserId)
+	int client = GetClientOfUserId(iUserId);
 	
 	if (!IsValidClient(client, false, false))
 		return Plugin_Continue;

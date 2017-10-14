@@ -58,6 +58,7 @@ int iMenuUse[MAXPLAYERS + 1] = 0;
 int iDJumped[MAXPLAYERS + 1] = 0;
 
 //Bool
+bool bIsLR = false;
 bool bCanRespawn[MAXPLAYERS + 1] = false;
 
 //String
@@ -260,7 +261,7 @@ public Action Command_VipMenu(int client, int args)
 	}
 	if (bIsLRAvaible && cv_bDisableLR.BoolValue)
 	{
-		if (IsLastRequestAvailable(true))
+		if (bIsLR)
 		{
 			CReplyToCommand(client, "%t %t", "Prefix", "HostiesLR_Active");
 			return Plugin_Handled;
@@ -571,7 +572,6 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 	}
 }
 
-
 /********************************************************************************************************************************
                                                               EVENTS
                                                               
@@ -695,7 +695,10 @@ public void Menu_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 	}
 }
 
-
+public void OnAvailableLR(int Announced)
+{
+	bIsLR = true;
+}
 
 /********************************************************************************************************************************
                                                               TIMERS

@@ -292,7 +292,7 @@ public void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast
 	if (!cv_bPluginEnable.BoolValue)
 		return;
 	int client = GetClientOfUserId(event.GetInt("userid"));
-	
+
 	OnBonusSet(client);
 	
 }
@@ -305,6 +305,7 @@ public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 		return;
 	
 	int client = GetClientOfUserId(event.GetInt("userid"));
+	bIsLR = false;
 	
 	SetEntData(client, iCash, GetEntData(client, iCash) + cv_iCashAmount.IntValue);
 }
@@ -325,9 +326,9 @@ public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
 	if (bIsMYJBAvaible && cv_bDisableOnEventday.BoolValue)
 		if (MyJailbreak_IsEventDayRunning())
 		return;
-	
+
 	if (bIsLRAvaible && cv_bDisableLR.BoolValue)
-		if (IsLastRequestAvailable(true))
+		if (bIsLR)
 		return;
 	
 	if (Vip_IsClientVip(attacker) && cv_iVipKillHp.IntValue >= 1 && headshot)
@@ -419,7 +420,7 @@ public Action OnPlayerRunCmd(int client, int &buttons) //DoubleJump & Bhop forke
 {
 	if (!cv_bPluginEnable.BoolValue)
 		return Plugin_Continue;
-		
+	
 	#if (VIPMENU != 0)
 	Menu_OnPlayerRunCmd(client, buttons);
 	#endif

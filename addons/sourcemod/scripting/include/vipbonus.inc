@@ -49,6 +49,15 @@ native void Vip_ResetItems(int client);
 forward Action Vip_OnBonusSet(int client);
 
 
+/**
+ * Called when a client uses the VipMenu
+ * @param client		Client Index.
+ * @param item			Item Used
+ * @noreturn
+ */
+forward void Vip_OnPlayerUseMenu(int client, const char[] item);
+
+
 public SharedPlugin __pl_vipbonus =
 {
 	name = "VipBonus",

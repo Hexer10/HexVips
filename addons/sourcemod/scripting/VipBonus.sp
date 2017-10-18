@@ -291,7 +291,11 @@ public void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast
 {
 	if (!cv_bPluginEnable.BoolValue)
 		return;
+	
 	int client = GetClientOfUserId(event.GetInt("userid"));
+	
+	if (!Vip_IsClientVip(client))
+		return;
 	
 	OnBonusSet(client);
 	
@@ -524,7 +528,7 @@ Action OnBonusSet(int client)
 	
 	if (cv_iVipSpawnHP.IntValue >= 1 || cv_fVipSpawnArmour.IntValue >= 1)
 	{
-		CreateTimer(3.7, tDelayLife, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE); //Delayed timer so this wont be overrided by other plugins
+		CreateTimer(3.7, tDelayLife, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE); //Delayed timer so this wont be overridden by other plugins
 	}
 	
 	if (cv_bVipDefuser.BoolValue)
@@ -546,9 +550,10 @@ public int Native_CheckVip(Handle plugin, int argc)
 		return ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", client);
 	}
 	if (cv_bRootAlways.BoolValue)
+	{
 		return CheckAdminFlag(client, sFlagNeeded);
-	else
-		return CheckAdminFlagEx(client, sFlagNeeded);
+	}
+	return CheckAdminFlagEx(client, sFlagNeeded);
 }
 
 

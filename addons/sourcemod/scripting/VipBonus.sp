@@ -46,7 +46,7 @@
 
 //Defines
 #define PLUGIN_AUTHOR "Hexah"
-#define PLUGIN_VERSION "3.03"
+#define PLUGIN_VERSION "3.04"
 #define DMG_FALL   (1 << 5)
 
 #define VIPMENU 1 //You can remove this without any problems.

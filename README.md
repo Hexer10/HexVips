@@ -5,3 +5,6 @@ Report Bugs or Request somethink with [isses sections](https://github.com/Hexer1
 
 
 Contact me [PM on AM](https://forums.alliedmods.net/member.php?u=273262) & [Steam](http://steamcommunity.com/id/hexer504/)
+
+
+[![HitCount](http://hits.dwyl.io/Hexer10/VipMenu-Bonuses.svg)](http://hits.dwyl.io/Hexer10/VipMenu-Bonuses)

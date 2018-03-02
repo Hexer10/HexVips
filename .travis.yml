@@ -1,20 +1,25 @@
 sudo: false
-
 addons:
   apt:
     packages:
     - lftp
     - lib32z1
     - lib32stdc++6
-
 language: c
-
 env:
-  - VERSION=1.8
-  - VERSION=1.9
-  
+- VERSION=1.8
+- VERSION=1.9
 script:
-  - 'bash ci/test.sh $VERSION;'
-
+- bash ci/test.sh $VERSION;
 notifications:
-    email: false
+  email: false
+deploy:
+  provider: releases
+  api_key:
+    secure: Q4xBL32wClC9pldR/gMwBfMjx5yncC15hxR1OAmb+4LuPc5oGfHSqwD4fSbGUFiOmhgfHaALw9MXFiPm3YueXSprmsJbEBu3zLmqb6LQZA14GFEiwLHXtyoy47Z6mFQ5qQEOX3Iop9s6OlCeJy/Bs3DASv4RC5AOQ5psfWLmqIeS8nNnR9I5L9tt/xBSZrl8EyDPsJJJAegu8U8+j6N/0W1FwAwixRFtKety2O1tB29gS5wU8m/YzZRMo+U9vLDxJdUcY9h6HzBf6NxFGpwCk1sHA254zaroMNtl/WPbwvmz8tOiR+BfRCZ00EsN2NxVh4Kgcp/2+mALKK3GGFnQMO1hABIsgDBqEVRIFVRFwkPq5gcjxk5usgg5RwE3ezSJcESXWqqDhNeiQYz28Y56/1WrSeeD988bnYcJkZcRhGMsuq6S+cxRKieahYbzdNFlhTPp7ydBHT9Yk+roNu7AfrMLAI+NCPkTjr31Me1imNS14+ol+ZPHj5oIGeYUE6C0Rcp2unSdW1ivI2UQRk+5XkumO39Ty/+spTBd2ZrZxEVM3H54EELx+GBzfm/UM4EgEv7wWeNN5UJJ+wozg2QuqI5UCoMjI+fPRaV54XIxdghPYqPFpY1Q19mDGDzwdAdX69QLMi1xQ2QnzB1YAmg6g1xZw1NIAeDGIgn2d7KnxEA=
+  file: VipBonus.zip
+  skip_cleanup: true
+  on:
+    branch: master
+    tags: true
+    repo: Hexer10/VipMenu-Bonuses

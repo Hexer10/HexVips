@@ -26,7 +26,6 @@ fi
 
 echo "Create clean plugins folder"
 mkdir -p build/addons/sourcemod/scripting/include
-mkdir build/addons/sourcemod/configs
 mkdir build/addons/sourcemod/plugins
 
 echo "Move plugins files to their folder"

@@ -101,6 +101,7 @@ ConVar cv_iNadeMolotov;
 ConVar cv_iNadeSmoke;
 ConVar cv_iNadeFlashbang;
 ConVar cv_iNadeHE;
+ConVar cv_iNadeTag;
 ConVar cv_iNadeKitTeam;
 ConVar cv_iRespawnTeam;
 ConVar cv_iHeavyTeam;
@@ -146,6 +147,7 @@ public void OnVipMenuStart()
 	cv_iNadeFlashbang = AutoExecConfig_CreateConVar("vip_menu_cn_flash_amount", "1", "Amount of flash for NadeKit.", 0, true, 0.0, true, 10.0);
 	cv_iNadeHE = AutoExecConfig_CreateConVar("vip_menu_cn_he_amount", "1", "Amount of he for NadeKit", 0, true, 0.0, true, 10.0);
 	cv_iNadeSmoke = AutoExecConfig_CreateConVar("vip_menu_cn_smoke_amount", "1", "Amount of smoke for NadeKit", 0, true, 0.0, true, 10.0);
+	cv_iNadeTag = AutoExecConfig_CreateConVar("vip_menu_cn_tag_amount", "0", "Amount of tagrenades for NadeKit", 0, true, 0.0, true, 10.0);
 	cv_bMenuBhop = AutoExecConfig_CreateConVar("vip_menu_bhop", "1", " 1 - Enable VipMenu Bhop. 0 - Disable ", 0, true, 0.0, true, 1.0);
 	cv_bMenuDobleJump = AutoExecConfig_CreateConVar("vip_menu_doublejump", "1", " 1 - Enable DoubleJump Life. 0 - Disable ", 0, true, 0.0, true, 1.0);
 	cv_sWeapon = AutoExecConfig_CreateConVar("vip_menu_weapon", "glock", " WEAPONNAME - Weapon to get. None - Disable. ( Weapon list: https://developer.valvesoftware.com/wiki/List_of_Counter-Strike:_Global_Offensive_Entities . Under Weapon tag) [NO NEED weapon_ ]");
@@ -543,6 +545,10 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 			{
 				GivePlayerItemAmmo(client, "weapon_smokegrenade", 1, cv_iNadeSmoke.IntValue);
 			}
+			if (cv_iNadeTag.IntValue != 0)
+			{
+				GivePlayerItemAmmo(client, "weapon_tagrenade", 1, cv_iNadeTag.IntValue);
+			}
 			
 			CPrintToChat(client, "%t %t", "Prefix", "Get_NadeKit");
 		}
@@ -580,7 +586,7 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 		else if (strcmp(info, "Heavy") == 0)
 		{
 			Forward_OnPlayerUseMenu(client, info);
-			iMenuUse++
+			iMenuUse[client]++;
 			bUsed[client][12] = true;
 			SetEntityModel(client, HEAVY_MODEL);
 			GivePlayerItem(client, "item_heavyassaultsuit");

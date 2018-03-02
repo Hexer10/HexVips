@@ -1,18 +1,20 @@
-sudo: false
 addons:
   apt:
     packages:
-    - lftp
     - lib32z1
     - lib32stdc++6
+
 language: c
-env:
-- VERSION=1.8
-- VERSION=1.9
+
+sudo: false
+
 script:
-- bash ci/test.sh $VERSION;
+- if [[ $TRAVIS_PULL_REQUEST != "false" ]]; then bash ci/test.sh; fi
+- if [[ $TRAVIS_PULL_REQUEST == "false" ]]; then bash ci/build.sh $TRAVIS_TAG; fi
+
 notifications:
   email: false
+
 deploy:
   provider: releases
   api_key:

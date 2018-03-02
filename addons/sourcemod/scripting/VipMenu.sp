@@ -522,7 +522,14 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 			bUsed[client][9] = true;
 			if (cv_iNadeMolotov.IntValue != 0)
 			{
-				GivePlayerItemAmmo(client, "weapon_molotov", 1, cv_iNadeMolotov.IntValue);
+				if (GetClientTeam(client) == CS_TEAM_T)
+				{
+					GivePlayerItemAmmo(client, "weapon_molotov", 1, cv_iNadeMolotov.IntValue);
+				}
+				else if (GetClientTeam(client) == CS_TEAM_CT)
+				{
+					GivePlayerItemAmmo(client, "weapon_incgrenade", 1, cv_iNadeMolotov.IntValue);
+				} 
 			}
 			if (cv_iNadeFlashbang.IntValue != 0)
 			{

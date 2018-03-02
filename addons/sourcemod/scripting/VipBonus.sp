@@ -33,10 +33,8 @@
 
 
 #undef REQUIRE_PLUGIN
-#undef REQUIRE_EXTENSIONS
 #include <myjailbreak>
 #include <lastrequest>
-#define REQUIRE_EXTENSIONS
 #define REQUIRE_PLUGIN
 
 //Compiler Options
@@ -264,7 +262,9 @@ public void OnClientPostAdminCheck(int client)
 	CheckTag(client);
 	if (Vip_IsClientVip(client) && cv_VipJoinMessage.BoolValue)
 	{
-		CPrintToChatAll("%t", "Vip_Joined", client);
+		char sName[32];
+		GetClientName(client, sName, sizeof(sName));
+		CPrintToChatAll("%t", "Vip_Joined", sName);
 	}
 }
 

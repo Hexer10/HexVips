@@ -173,4 +173,10 @@
 	{
 		"en" "You cannot use the VipMenu during the LR!"
 	}
+	
+	"VipJoined"
+	{
+		"#format" "{1:s}"
+		"en" "VIP %1 joined!"
+	}
 }

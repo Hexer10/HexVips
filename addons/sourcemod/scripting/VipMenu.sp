@@ -24,15 +24,14 @@
 
 //#include "VipBonus.sp"
 
-
-
-
+//Defines
+#define HEAVY_MODEL "models/player/custom_player/legacy/tm_phoenix_heavy.mdl"
 
 //Bool
 bool bRegen[MAXPLAYERS + 1] = false;
 bool bBhop[MAXPLAYERS + 1] = false;
 bool bDoubleJump[MAXPLAYERS + 1] = false;
-bool bUsed[MAXPLAYERS + 1][12];
+bool bUsed[MAXPLAYERS + 1][13];
 /*
 0 - Life
 1 - Armour
@@ -46,9 +45,8 @@ bool bUsed[MAXPLAYERS + 1][12];
 9 - Double
 10 - Weapon
 11 - Respawn
+12 - Heavy
 */
-
-
 
 //Handle
 Handle hRegenTimer[MAXPLAYERS + 1];
@@ -65,8 +63,6 @@ bool bCanRespawn[MAXPLAYERS + 1] = false;
 char sWeapon[64];
 char sMenuName[32];
 
-
-
 //ConVar bool
 ConVar cv_bEnableVipMenu;
 ConVar cv_bMenuLife;
@@ -80,6 +76,7 @@ ConVar cv_bMenuBhop;
 ConVar cv_bMenuDobleJump;
 ConVar cv_bMenuNadeKit;
 ConVar cv_bMenuRespawn;
+ConVar cv_bMenuHeavy;
 ConVar cv_bMenuDoubleUses;
 ConVar cv_bStopTimer;
 ConVar cv_bDisableLR;
@@ -106,6 +103,7 @@ ConVar cv_iNadeFlashbang;
 ConVar cv_iNadeHE;
 ConVar cv_iNadeKitTeam;
 ConVar cv_iRespawnTeam;
+ConVar cv_iHeavyTeam;
 
 //ConVar float
 ConVar cv_fHpTimer;
@@ -115,8 +113,6 @@ ConVar cv_fGravity;
 //ConVar String
 ConVar cv_sVipMenuComm;
 ConVar cv_sWeapon;
-
-
 
 public void Menu_AskPluginLoad2()
 {
@@ -159,6 +155,7 @@ public void OnVipMenuStart()
 	cv_iRegenHP = AutoExecConfig_CreateConVar("vip_menu_regen_hp", "10", "Regen +HP");
 	cv_bStopTimer = AutoExecConfig_CreateConVar("vip_menu_regen_stop", "0", " 0 - Stop Regen when reached max. 1 - Continue when get lower MaxHP", 0, true, 0.0, true, 1.0);
 	cv_bMenuRespawn = AutoExecConfig_CreateConVar("vip_menu_respawn", "0", " 1 - Enable VipMenu Respawn. 0 - Disable", 0, true, 0.0, true, 1.0);
+	cv_bMenuHeavy = AutoExecConfig_CreateConVar("vip_menu_heavy", "0", " 0 - Enable Heavy. 0 - Disable ", 0, true, 0.0, true, 1.0);
 	cv_iLifeTeam = AutoExecConfig_CreateConVar("vip_menu_team_life", "3", "Team to use Life. 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
 	cv_iArmourTeam = AutoExecConfig_CreateConVar("vip_menu_team_armour", "3", "Team to use Armour. 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
 	cv_iGravityTeam = AutoExecConfig_CreateConVar("vip_menu_team_gravity", "3", "Team to use Gravity. 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
@@ -171,6 +168,8 @@ public void OnVipMenuStart()
 	cv_iRegenTeam = AutoExecConfig_CreateConVar("vip_menu_team_regen", "3", "Team to use Regen. 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
 	cv_iWeapTeam = AutoExecConfig_CreateConVar("vip_menu_team_customweapon", "3", "Team to use CustomWeapon. 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
 	cv_iRespawnTeam = AutoExecConfig_CreateConVar("vip_menu_team_respawn", "3", "Team to use Respawn. 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
+	cv_iHeavyTeam =  AutoExecConfig_CreateConVar("vip_menu_team_heavy", "3", "Team to use Respawn. 1 = T 2 = CT 3 = Both", 0, true, 1.0, true, 3.0);
+	
 	AutoExecConfig_ExecuteFile();
 	AutoExecConfig_CleanFile();
 	
@@ -178,6 +177,11 @@ public void OnVipMenuStart()
 	HookEvent("player_spawn", Menu_PlayerSpawn);
 	HookEvent("player_death", Menu_PlayerDeath);
 	cv_sWeapon.GetString(sWeapon, sizeof(sWeapon));
+}
+
+public void OnMapStart()
+{
+	PrecacheModel(HEAVY_MODEL);
 }
 
 /********************************************************************************************************************************
@@ -411,6 +415,10 @@ void vmenu(int client) //MENU
 	{
 		AddMenuItemFormat(menu, "Respawn", bUsed[client][11] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT, "%t", "Menu_Respawn");
 	}
+	if (cv_bMenuHeavy.BoolValue && IsValidTeam(client, cv_iHeavyTeam.IntValue))
+	{
+		AddMenuItemFormat(menu, "Heavy", bUsed[client][12] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT, "%t", "Menu_Heavy");
+	}
 	
 	menu.ExitButton = true;
 	menu.Display(client, MENU_TIME_FOREVER);
@@ -561,6 +569,16 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 			CPrintToChat(client, "%t %t", "Prefix", "Get_Respawn");
 		}
 		
+		else if (strcmp(info, "Heavy") == 0)
+		{
+			Forward_OnPlayerUseMenu(client, info);
+			iMenuUse++
+			bUsed[client][12] = true;
+			SetEntityModel(client, HEAVY_MODEL);
+			GivePlayerItem(client, "item_heavyassaultsuit");
+			SetEntProp(client, Prop_Send, "m_bHasHelmet", 1);
+			CPrintToChat(client, "%t %t", "Prefix", "Get_Heavy");
+		}
 		else
 		{
 			PrintToChat(client, "[SM] There was an errror, contanct an administrator please!");

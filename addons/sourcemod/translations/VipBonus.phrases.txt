@@ -159,6 +159,16 @@
 		"en" "You got one respawn!"
 	}
 	
+	"Menu_Heavy"
+	{
+		"en" "Heavy"
+	}
+	
+	"Get_Heavy"
+	{
+		"en" "You got the heavy armor"
+	}
+	
 	"Can_Respawn"
 	{
 		"en" "You can now respawn! Open the VipMenu!"

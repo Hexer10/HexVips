@@ -447,6 +447,7 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 			Forward_OnPlayerUseMenu(client, info);
 			CPrintToChat(client, "%t %t", "Prefix", "Get_Armour");
 			SetEntProp(client, Prop_Send, "m_ArmorValue", cv_iArmour.IntValue);
+			SetEntProp(client, Prop_Send, "m_bHasHelmet", 1);
 			iMenuUse[client]++;
 			bUsed[client][1] = true;
 		}

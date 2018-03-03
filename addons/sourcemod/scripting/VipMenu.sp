@@ -60,7 +60,6 @@ bool bIsLR = false;
 bool bCanRespawn[MAXPLAYERS + 1] = false;
 
 //String
-char sWeapon[64];
 char sMenuName[32];
 
 //ConVar bool
@@ -178,7 +177,6 @@ public void OnVipMenuStart()
 	
 	HookEvent("player_spawn", Menu_PlayerSpawn);
 	HookEvent("player_death", Menu_PlayerDeath);
-	cv_sWeapon.GetString(sWeapon, sizeof(sWeapon));
 }
 
 public void OnMapStart()
@@ -367,6 +365,10 @@ void vmenu(int client) //MENU
 		}
 	}
 	
+	char sWeapon[32];
+	cv_sWeapon.GetString(sWeapon, sizeof(sWeapon));
+	TrimString(sWeapon);
+	
 	if (cv_bMenuLife.BoolValue && IsValidTeam(client, cv_iLifeTeam.IntValue))
 	{
 		AddMenuItemFormat(menu, "Life", bUsed[client][0] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT, "%t", "Menu_Life");
@@ -409,7 +411,7 @@ void vmenu(int client) //MENU
 	{
 		AddMenuItemFormat(menu, "Double", bUsed[client][9] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT, "%t", "Menu_DoubleJump");
 	}
-	if (!StrEqual(sWeapon, "none", false) && IsValidTeam(client, cv_iWeapTeam.IntValue))
+	if (!StrEqual(sWeapon, "", false) && IsValidTeam(client, cv_iWeapTeam.IntValue))
 	{
 		AddMenuItemFormat(menu, "Weap", bUsed[client][10] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT, "%t", "Menu_Weapon");
 	}
@@ -558,6 +560,8 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 			Forward_OnPlayerUseMenu(client, info);
 			iMenuUse[client]++;
 			bUsed[client][10] = true;
+			char sWeapon[32];
+			cv_sWeapon.GetString(sWeapon, sizeof(sWeapon));
 			if (StrContains(sWeapon, "weapon_", true))
 			{
 				Format(sWeapon, sizeof(sWeapon), "weapon_%s", sWeapon);
@@ -565,13 +569,14 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 			
 			if (GivePlayerItem(client, sWeapon) == -1)
 			{
+				iMenuUse[client]--;				
 				PrintToChat(client, "[SM]Error occured while giving the weapons, contact an administrator please. Error: Invalid Item name/id");
-				iMenuUse[client]--;
 				ThrowError("[VIPBONUS] Error occured while giving %s to %n, INVALID ITEM ID/NAME", sWeapon, client);
 			}
 			else
+			{
 				CPrintToChat(client, "%t %t", "Prefix", "Get_Weapon");
-			
+			}	
 		}
 		
 		else if (strcmp(info, "Respawn") == 0)

@@ -146,7 +146,7 @@ public void OnPluginStart()
 	cv_VipJoinMessage = AutoExecConfig_CreateConVar("vip_core_join", "1", " 1 - Enable join message. 0 - Disable.");
 	cv_sDamageReduction = AutoExecConfig_CreateConVar("vip_core_damage_reduction", "0", " Amount of damage boost ( Can be % also ). 0 - Disable.");
 	cv_sDamageBoost = AutoExecConfig_CreateConVar("vip_core_damage_booster", "0", " Amount of damage reduction ( Can be % also ). 0 - Disable.");
-	cv_iNoFall = AutoExecConfig_CreateConVar("vip_core_nofall", "100", "% of FallDamage reduction. 0 - Disable.", _, true, 0.0, true, 100.0);
+	cv_iNoFall = AutoExecConfig_CreateConVar("vip_core_nofall", "100", "Percentage of FallDamage reduction. 0 - Disable.", _, true, 0.0, true, 100.0);
 	cv_sVipTag = AutoExecConfig_CreateConVar("vip_core_tag", "[VIP]", "Clan Tag for Vips(Root will never have the tag). - none - Disable.");
 	cv_bVipTag = AutoExecConfig_CreateConVar("vip_core_tag_override", "1", " 0 - Place the tag before the exising. 1 - Override the old tag.");
 	cv_bVipDefuser = AutoExecConfig_CreateConVar("vip_core_defuser", "1", "Give defuse kit to VIP Cts", _, true, 0.0, true, 1.0);

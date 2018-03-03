@@ -7,9 +7,10 @@ TAG=$1
 echo "Create clean plugins folder"
 mkdir -p build/addons/sourcemod/scripting/include
 mkdir build/addons/sourcemod/plugins
+mkdir build/addons/sourcemod/translations
 
 echo "Move Phrases"
-mv addons/sourcemod/translations build/addons/sourcemod
+mv addons/sourcemod/translations/* build/addons/sourcemod/translations
 
 echo "Download und extract sourcemod"
 wget "http://www.sourcemod.net/latest.php?version=1.8&os=linux" -O sourcemod.tar.gz

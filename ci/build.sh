@@ -11,8 +11,8 @@ mkdir build/addons/sourcemod/translations
 
 echo "Move Phrases"
 mv addons/sourcemod/translations/* build/addons/sourcemod/translations
-ls addons/sourcemod/translations
-ls addons/sourcemod
+ls build/addons/sourcemod/translations
+ls build/addons/sourcemod
 echo "Download und extract sourcemod"
 wget "http://www.sourcemod.net/latest.php?version=1.8&os=linux" -O sourcemod.tar.gz
 tar -xzf sourcemod.tar.gz

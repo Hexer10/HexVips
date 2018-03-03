@@ -39,4 +39,9 @@ echo "Compress the plugin"
 mv LICENSE build/
 cd build/ && zip -9rq VipBonus.zip addons/ LICENSE && mv VipBonus.zip ../
 
+cd ..
+ls build/addons/sourcemod/translations
+ls build/addons/sourcemod
+
+
 echo "Build done"

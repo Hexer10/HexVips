@@ -3,6 +3,15 @@ set -ev
 
 TAG=$1
 
+echo "Create clean plugins folder"
+mkdir -p build/addons/sourcemod/scripting/include
+mkdir -p build/addons/sourcemod/plugins
+mkdir -p build/addons/sourcemod/translations
+
+#Move firstly the Phrases
+echo "Move Phrases"
+mv addons/sourcemod/translations/* build/addons/sourcemod/translations/
+
 echo "Download und extract sourcemod"
 wget "http://www.sourcemod.net/latest.php?version=1.8&os=linux" -O sourcemod.tar.gz
 tar -xzf sourcemod.tar.gz
@@ -18,14 +27,6 @@ do
 done
 
 addons/sourcemod/scripting/compile.sh VipBonus.sp
-
-echo "Create clean plugins folder"
-mkdir -p build/addons/sourcemod/scripting/include
-mkdir build/addons/sourcemod/plugins
-mkdir build/addons/sourcemod/translations
-
-echo "Move Phrases"
-mv addons/sourcemod/translations/* build/addons/sourcemod/translations
 
 echo "Move plugins files to their folder"
 mv addons/sourcemod/scripting/include/vipbonus.inc build/addons/sourcemod/scripting/include

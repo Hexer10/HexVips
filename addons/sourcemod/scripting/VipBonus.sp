@@ -139,6 +139,10 @@ public void OnPluginStart()
 	//Convars
 	CreateConVar("vipbonus_version", PLUGIN_VERSION, "VipBonus/Menu Version", FCVAR_NOTIFY | FCVAR_DONTRECORD | FCVAR_SPONLY | FCVAR_REPLICATED);
 	
+	
+	if (CreateDirectoryEx("cfg/VipBonus"))
+		PrintToServer("Created VipBonus cfg directory!");
+	
 	AutoExecConfig_SetFile("VipCore", "VipBonus");
 	AutoExecConfig_SetCreateFile(true);
 	cv_bPluginEnable = AutoExecConfig_CreateConVar("sm_vipbonus_enable", "1", "1 - Plugin enabled. 0 - Plugin disabled", _, true, 0.0, true, 1.0);

@@ -20,23 +20,23 @@ echo "Give compiler rights for compile"
 chmod +x addons/sourcemod/scripting/spcomp
 
 echo "Set plugins version"
-for file in addons/sourcemod/scripting/VipBonus.sp
+for file in addons/sourcemod/scripting/hexvips.sp
 do
   sed -i "s/<TAG>/$TAG/g" $file > output.txt
   rm output.txt
 done
 
-addons/sourcemod/scripting/compile.sh VipBonus.sp
+addons/sourcemod/scripting/compile.sh hexvips.sp
 
 echo "Move plugins files to their folder"
-mv addons/sourcemod/scripting/include/vipbonus.inc build/addons/sourcemod/scripting/include
-mv addons/sourcemod/scripting/VipBonus.sp build/addons/sourcemod/scripting
-mv addons/sourcemod/scripting/VipMenu.sp build/addons/sourcemod/scripting
-mv addons/sourcemod/scripting/compiled/VipBonus.smx build/addons/sourcemod/plugins
+mv addons/sourcemod/scripting/include/hexvips.inc build/addons/sourcemod/scripting/include
+mv addons/sourcemod/scripting/hexvips.sp build/addons/sourcemod/scripting
+mv addons/sourcemod/scripting/vipmenu.sp build/addons/sourcemod/scripting
+mv addons/sourcemod/scripting/compiled/hexvips.smx build/addons/sourcemod/plugins
 
 echo "Compress the plugin"
 mv LICENSE build/
-cd build/ && zip -9rq VipBonus.zip addons/ LICENSE && mv VipBonus.zip ../
+cd build/ && zip -9rq HexVips.zip addons/ LICENSE && mv HexVips.zip ../
 
 cd ..
 ls build/addons/sourcemod/translations

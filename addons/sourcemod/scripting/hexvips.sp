@@ -135,12 +135,15 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int max_err
 	fOnVipStatusUpdate = CreateGlobalForward("HexVips_VipStatusUpdated", ET_Ignore, Param_Cell, Param_Cell);
 	
 	#if (VIPMENU != 0)
+	CreateNative("Vip_ResetItems", Native_ResetItems);
+	
+	CreateNative("HexVips_ResetItems", Native_ResetItems);
 	fOnPlayerUseMenu = CreateGlobalForward("HexVip_OnPlayerUseMenu", ET_Ignore, Param_Cell, Param_String);
-	Menu_AskPluginLoad2();
 	#endif
 	bLateLoad = late;
 	return APLRes_Success;
 }
+
 
 
 public void OnPluginStart()
@@ -150,7 +153,6 @@ public void OnPluginStart()
 	
 	//Convars
 	CreateConVar("hexvips_version", PLUGIN_VERSION, "HexVips Version", FCVAR_NOTIFY | FCVAR_DONTRECORD | FCVAR_SPONLY | FCVAR_REPLICATED);
-	
 	
 	if (CreateDirectoryEx("cfg/HexVips"))
 		PrintToServer("Created HexVips cfg directory!");
@@ -553,7 +555,7 @@ stock bool IsValidTeam(int client, int convar)
                                                               
 *********************************************************************************************************************************/
 
-Action OnBonusSet(int client)
+void OnBonusSet(int client)
 {
 	Action res = Plugin_Continue;
 	
@@ -563,7 +565,7 @@ Action OnBonusSet(int client)
 	
 	if (res >= Plugin_Handled)
 	{
-		return Plugin_Handled;
+		return;
 	}
 	
 	#if (VIPMENU != 0)
@@ -572,7 +574,7 @@ Action OnBonusSet(int client)
 	
 	if (bIsMYJBAvaible && cv_bDisableOnEventday.BoolValue)
 		if (MyJailbreak_IsEventDayRunning())
-		return Plugin_Handled;
+		return;
 	
 	if (cv_iVipSpawnHP.IntValue >= 1 || cv_fVipSpawnArmour.IntValue >= 1)
 	{
@@ -583,7 +585,7 @@ Action OnBonusSet(int client)
 	{
 		GivePlayerItem(client, "item_defuser");
 	}
-	return Plugin_Continue;
+	return;
 }
 
 public int Native_CheckVip(Handle plugin, int argc)

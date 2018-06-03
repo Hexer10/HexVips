@@ -31,6 +31,7 @@
 bool bRegen[MAXPLAYERS + 1] = false;
 bool bBhop[MAXPLAYERS + 1] = false;
 bool bDoubleJump[MAXPLAYERS + 1] = false;
+bool bResetGravity[MAXPLAYERS + 1] = false;
 bool bUsed[MAXPLAYERS + 1][13];
 /*
 0 - Life
@@ -114,11 +115,6 @@ ConVar cv_fGravity;
 ConVar cv_sVipMenuComm;
 ConVar cv_sWeapon;
 
-public void Menu_AskPluginLoad2()
-{
-	CreateNative("Vip_ResetItems", Native_ResetItems);
-}
-
 public void OnVipMenuStart()
 {
 	RegConsoleCmd("sm_vipmenu", Command_VipMenu, "Open VipMenu for VIPs");
@@ -128,8 +124,8 @@ public void OnVipMenuStart()
 	AutoExecConfig_SetCreateFile(true);
 	cv_bEnableVipMenu = AutoExecConfig_CreateConVar("vip_menu_vipmenu", "1", " 1 - Enable VipMenu. 0 - Disable", 0, true, 0.0, true, 1.0);
 	cv_sVipMenuComm = AutoExecConfig_CreateConVar("vip_menu_vipmenucmds", "vmenu", "Commands to open the Vipmenu (no need of sm_ or ! or /)(separeted by a comma ',')");
-	cv_iMenuUse = AutoExecConfig_CreateConVar("vip_menu_uses", "1", "Max VipMenu uses per round", 0, true, 0.0, true, 1.0);
-	cv_bMenuDoubleUses = AutoExecConfig_CreateConVar("vip_menu_use_once", "1", " 1 - Same item can be used only once. 0 - Same item can be used multiple times");
+	cv_iMenuUse = AutoExecConfig_CreateConVar("vip_menu_uses", "1", "Max VipMenu uses per round", 0, true, 0.0);
+	cv_bMenuDoubleUses = AutoExecConfig_CreateConVar("vip_menu_use_once", "1", " 1 - Same item can be used only once. 0 - Same item can be used multiple times", 0, true, 0.0, true, 1.0);
 	cv_bDisableLR = AutoExecConfig_CreateConVar("vip_menu_disable_lr", "1", "Disable VipMenu in sm_hosties LR", 0, true, 0.0, true, 1.0);
 	cv_bMenuLife = AutoExecConfig_CreateConVar("vip_menu_life", "1", " 1 - Enable VipMenu Life. 0 - Disable ", 0, true, 0.0, true, 1.0);
 	cv_iLifeHP = AutoExecConfig_CreateConVar("vip_menu_life_amount", "50", "Amount +HP");
@@ -188,7 +184,6 @@ public void OnMapStart()
                                                               COMMANDS
                                                               
 *********************************************************************************************************************************/
-
 
 
 public Action Command_ResMenu(int client, int args)
@@ -353,11 +348,11 @@ public int hRespawnMenu(Handle menu, MenuAction action, int client, int param2) 
 }
 void vmenu(int client) //MENU
 {
-	Menu menu = CreateMenu(hMenu, MENU_ACTIONS_ALL);
+	Menu menu = new Menu(hMenu);
 	Format(sMenuName, sizeof(sMenuName), "%t", "Menu_Title");
 	menu.SetTitle(sMenuName);
 	
-	if (cv_bMenuDoubleUses)
+	if (!cv_bMenuDoubleUses.BoolValue)
 	{
 		for (int i = 0; i < sizeof(bUsed[]); i++)
 		{
@@ -477,7 +472,7 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 			CPrintToChat(client, "%t %t", "Prefix", "Get_Speed");
 			SetEntitySpeed(client, cv_fSpeed.FloatValue);
 			iMenuUse[client]++;
-			bUsed[client][4] = true;
+			bUsed[client][5] = true;
 		}
 		else if (strcmp(info, "Gravity") == 0)
 		{
@@ -485,7 +480,8 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 			CPrintToChat(client, "%t %t", "Prefix", "Get_Gravity");
 			SetEntityGravity(client, cv_fGravity.FloatValue);
 			iMenuUse[client]++;
-			bUsed[client][5] = true;
+			bResetGravity[client] = true;
+			bUsed[client][6] = true;
 		}
 		else if (strcmp(info, "Regen") == 0)
 		{
@@ -499,7 +495,7 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 			}
 			hRegenTimer[client] = CreateTimer(cv_fHpTimer.FloatValue, Timer_Regen, GetClientUserId(client), TIMER_REPEAT);
 			iMenuUse[client]++;
-			bUsed[client][6] = true;
+			bUsed[client][7] = true;
 		}
 		else if (strcmp(info, "Bhop") == 0)
 		{
@@ -507,7 +503,7 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 			CPrintToChat(client, "%t %t", "Prefix", "Get_Bhop");
 			bBhop[client] = true;
 			iMenuUse[client]++;
-			bUsed[client][7] = true;
+			bUsed[client][8] = true;
 		}
 		
 		else if (strcmp(info, "Double") == 0)
@@ -516,14 +512,14 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 			CPrintToChat(client, "%t %t", "Prefix", "Get_DoubleJump");
 			bDoubleJump[client] = true;
 			iMenuUse[client]++;
-			bUsed[client][8] = true;
+			bUsed[client][9] = true;
 		}
 		
 		else if (strcmp(info, "NadeKit") == 0)
 		{
 			Forward_OnPlayerUseMenu(client, info);
 			iMenuUse[client]++;
-			bUsed[client][9] = true;
+			bUsed[client][4] = true;
 			if (cv_iNadeMolotov.IntValue != 0)
 			{
 				if (GetClientTeam(client) == CS_TEAM_T)
@@ -617,6 +613,15 @@ public void Menu_PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 	if (!IsValidClient(client, false, true))
 		return;
 	
+	if (bResetGravity[client])
+	{
+		SetEntityGravity(client, 1.0);
+		bResetGravity[client] = false;
+	}
+		
+	for (int i = 0; i < sizeof(bUsed[]); i++)
+		bUsed[i][client] = false;
+		
 	iMenuUse[client] = 0;
 	bRegen[client] = false;
 	bBhop[client] = false;

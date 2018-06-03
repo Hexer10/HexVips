@@ -42,12 +42,27 @@ native bool Vip_IsClientVip(int client);
 native void Vip_ResetItems(int client);
 
 /**
+ * Sets a client's VIP Status
+ * @param client		Client Index.
+ * @param status		True to make player VIP, false otherwise.
+ * @noreturn
+ */
+native void Vip_SetVipStatus(int client, bool status);
+
+/**
  * Called when the VipBonuses are assigned to a client.
  * @param client		Client Index.
  * @return 				Plugin_Handled to block or Plugin_Continue to allow.
  */
 forward Action Vip_OnBonusSet(int client);
 
+/**
+ * Called when a VipStatus is updated.
+ * @param client		Client Index.
+ * @param status		True if the client is VIP, false otherwise.
+ * @noreturn
+ */
+forward void Vip_VipStatusUpdated(int client, bool status);
 
 /**
  * Called when a client uses the VipMenu

@@ -44,13 +44,14 @@
 
 //Defines
 #define PLUGIN_AUTHOR "Hexah"
-#define PLUGIN_VERSION "3.04"
+#define PLUGIN_VERSION "<TAG>"
 #define DMG_FALL   (1 << 5)
 
 #define VIPMENU 1 //You can remove this without any problems.
 
 //Handle
-Handle fOnVipBonusAdded = INVALID_HANDLE;
+Handle fOnVipBonusAdded;
+Handle fOnVipStatusUpdate;
 
 #if (VIPMENU != 0)
 Handle fOnPlayerUseMenu;
@@ -65,9 +66,10 @@ char sDamageBoost[32];
 char sDamageReduction[32];
 
 //Bool
-bool bIsMYJBAvaible = false;
-bool bIsLRAvaible = false;
-bool bLateLoad = false;
+bool bVip[MAXPLAYERS + 1];
+bool bIsMYJBAvaible;
+bool bIsLRAvaible;
+bool bLateLoad;
 
 //Convars bool
 ConVar cv_bDisableOnEventday;
@@ -106,7 +108,7 @@ public Plugin myinfo =
 {
 	name = "VipBonus", 
 	author = PLUGIN_AUTHOR, 
-	description = "Provide some bonuses and VipMenu to VIPs", 
+	description = "Provide bonuses and VipMenu to VIPs", 
 	version = PLUGIN_VERSION, 
 	url = "https://github.com/Hexer10/VipMenu-Bonuses"
 };
@@ -120,8 +122,13 @@ public Plugin myinfo =
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int max_err)
 {
 	RegPluginLibrary("VipBonus");
+	
 	CreateNative("Vip_IsClientVip", Native_CheckVip);
-	fOnVipBonusAdded = CreateGlobalForward("Vip_OnBonusSet", ET_Ignore, Param_Cell);
+	CreateNative("Vip_SetVipStatus", Native_SetVip);
+
+	fOnVipBonusAdded = CreateGlobalForward("Vip_OnBonusSet", ET_Event, Param_Cell);
+	fOnVipStatusUpdate = CreateGlobalForward("Vip_VipStatusUpdated", ET_Ignore, Param_Cell, Param_Cell);
+	
 	#if (VIPMENU != 0)
 	fOnPlayerUseMenu = CreateGlobalForward("Vip_OnPlayerUseMenu", ET_Ignore, Param_Cell, Param_String);
 	Menu_AskPluginLoad2();
@@ -235,12 +242,57 @@ public void OnClientPutInServer(int client)
 	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 }
 
+public void OnClientPostAdminCheck(int client)
+{
+	if (cv_bRootAlways.BoolValue)
+	{
+		bVip[client] = CheckAdminFlag(client, sFlagNeeded);
+	}
+	bVip[client] = CheckAdminFlagEx(client, sFlagNeeded);
+	Call_StartForward(fOnVipStatusUpdate);
+	Call_PushCell(client);
+	Call_PushCell(bVip[client]);
+	Call_Finish();
+	
+	if (!cv_bPluginEnable.BoolValue)
+		return;
+		
+	CheckTag(client);
+	if ((bVip[client] && !(GetUserFlagBits(client) & ADMFLAG_ROOT)) && cv_VipJoinMessage.BoolValue)
+	{
+		char sName[32];
+		GetClientName(client, sName, sizeof(sName));
+		CPrintToChatAll("%t", "Vip_Joined", sName);
+	}
+}
+
+public void OnClientDisconnect(int client)
+{
+	bVip[client] = false;
+}
+
+public void OnRebuildAdminCache(AdminCachePart part)
+{
+	for (int i = 1; i <= MaxClients; i++)if (IsClientAuthorized(i))
+	{
+		if (cv_bRootAlways.BoolValue)
+		{
+			bVip[i] = CheckAdminFlag(i, sFlagNeeded);
+		}
+		bVip[i] = CheckAdminFlagEx(i, sFlagNeeded);
+		Call_StartForward(fOnVipStatusUpdate);
+		Call_PushCell(i);
+		Call_PushCell(bVip[i]);
+		Call_Finish();
+	}
+}
+
 void CheckTag(int client) //HANDLE TAG
 {
 	char sVipTag[32];
 	cv_sVipTag.GetString(sVipTag, sizeof(sVipTag));
 	
-	if ((IsValidClient(client, false, true) && !StrEqual(sVipTag, "none", false)) && (CheckAdminFlagEx(client, sFlagNeeded)))
+	if ((IsValidClient(client, false, true) && !StrEqual(sVipTag, "none", false)) && (bVip[client] && !(GetUserFlagBits(client) & ADMFLAG_ROOT)))
 	{
 		if (cv_bVipTag.BoolValue)
 			CS_SetClientClanTag(client, sVipTag);
@@ -257,19 +309,6 @@ void CheckTag(int client) //HANDLE TAG
 		}
 	}
 	
-}
-
-public void OnClientPostAdminCheck(int client)
-{
-	if (!cv_bPluginEnable.BoolValue)
-		return;
-	CheckTag(client);
-	if (Vip_IsClientVip(client) && cv_VipJoinMessage.BoolValue)
-	{
-		char sName[32];
-		GetClientName(client, sName, sizeof(sName));
-		CPrintToChatAll("%t", "Vip_Joined", sName);
-	}
 }
 
 public void Event_CheckTag(Event event, const char[] name, bool dontBroadcast)
@@ -553,11 +592,22 @@ public int Native_CheckVip(Handle plugin, int argc)
 	{
 		return ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", client);
 	}
-	if (cv_bRootAlways.BoolValue)
+	return bVip[client];
+}
+
+public int Native_SetVip(Handle plugin, int argc)
+{
+	int client = GetNativeCell(1);
+	if (client < 1 || client > MaxClients)
 	{
-		return CheckAdminFlag(client, sFlagNeeded);
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid client index (%d)", client);
 	}
-	return CheckAdminFlagEx(client, sFlagNeeded);
+	if (!IsClientConnected(client))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", client);
+	}
+	bVip[client] = GetNativeCell(2);
+	return 1;
 }
 
 

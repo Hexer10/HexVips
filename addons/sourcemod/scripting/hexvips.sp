@@ -60,11 +60,6 @@ Handle fOnPlayerUseMenu;
 //Int
 int iCash = -1;
 
-//String
-char sFlagNeeded[32];
-char sDamageBoost[32];
-char sDamageReduction[32];
-
 //Bool
 bool bVip[MAXPLAYERS + 1];
 bool bIsMYJBAvaible;
@@ -193,13 +188,13 @@ public void OnPluginStart()
 	HookEvent("round_start", Event_CheckTag);
 	
 	if (bLateLoad)
+	{
 		for (int i = 1; i <= MaxClients; i++)if (IsClientInGame(i))
-		OnClientPutInServer(i);
-	
-	//Misc
-	cv_sFlagNeeded.GetString(sFlagNeeded, sizeof(sFlagNeeded));
-	cv_sDamageReduction.GetString(sDamageReduction, sizeof(sDamageReduction));
-	cv_sDamageBoost.GetString(sDamageBoost, sizeof(sDamageBoost));
+		{
+			OnClientPutInServer(i);
+			OnClientPostAdminCheck(i);
+		}
+	}
 	
 	#if (VIPMENU != 0)
 	OnVipMenuStart();
@@ -251,6 +246,9 @@ public void OnClientPutInServer(int client)
 
 public void OnClientPostAdminCheck(int client)
 {
+	char sFlagNeeded[16];
+	cv_sFlagNeeded.GetString(sFlagNeeded, sizeof(sFlagNeeded));
+
 	if (cv_bRootAlways.BoolValue)
 	{
 		bVip[client] = CheckAdminFlag(client, sFlagNeeded);
@@ -280,6 +278,10 @@ public void OnClientDisconnect(int client)
 
 public void OnRebuildAdminCache(AdminCachePart part)
 {
+	char sFlagNeeded[16];
+	cv_sFlagNeeded.GetString(sFlagNeeded, sizeof(sFlagNeeded));
+	
+
 	for (int i = 1; i <= MaxClients; i++)if (IsClientInGame(i) && IsClientAuthorized(i))
 	{
 		if (cv_bRootAlways.BoolValue)
@@ -415,6 +417,11 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
 		if (bIsLR)
 		return Plugin_Continue;
 	
+	char sDamageReduction[16];
+	char sDamageBoost[16];
+	
+	cv_sDamageReduction.GetString(sDamageReduction, sizeof(sDamageReduction));
+	cv_sDamageBoost.GetString(sDamageBoost, sizeof(sDamageBoost));
 	if (IsValidClient(victim, true, false) && cv_sDamageBoost.BoolValue)
 	{
 		if (StrContains(sDamageBoost, "%", false) != -1)

@@ -145,7 +145,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int max_err
 
 public void OnPluginStart()
 {
-	LoadTranslations("VipBonus.phrases");
+	LoadTranslations("HexVips.phrases");
 	LoadTranslations("common.phrases");
 	
 	//Convars

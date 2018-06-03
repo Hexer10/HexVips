@@ -1,11 +1,11 @@
 /*
- * VipMenu-Bonuses - VipMenu Plugin.
+ * HexVips - VipMenu Plugin.
  * by: Hexer10
- * https://github.com/Hexer10/VipMenu-Bonuses
+ * https://github.com/Hexer10/HexVips
  * 
  * Copyright (C) 2016-2017 Mattia (Hexer10 | Hexah | Papero)
  *
- * This file is part of the VipMenu-Bonuses SourceMod Plugin.
+ * This file is part of the HexVips SourceMod Plugin.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License, version 3.0, as published by the
@@ -124,7 +124,7 @@ public void OnVipMenuStart()
 	RegConsoleCmd("sm_vipmenu", Command_VipMenu, "Open VipMenu for VIPs");
 	RegAdminCmd("sm_resetvipmenu", Command_ResMenu, ADMFLAG_CONFIG, "Reset VIPMenu advantages (Weapons remains)");
 	
-	AutoExecConfig_SetFile("VipMenu", "VipBonus");
+	AutoExecConfig_SetFile("VipMenu", "HexVips");
 	AutoExecConfig_SetCreateFile(true);
 	cv_bEnableVipMenu = AutoExecConfig_CreateConVar("vip_menu_vipmenu", "1", " 1 - Enable VipMenu. 0 - Disable", 0, true, 0.0, true, 1.0);
 	cv_sVipMenuComm = AutoExecConfig_CreateConVar("vip_menu_vipmenucmds", "vmenu", "Commands to open the Vipmenu (no need of sm_ or ! or /)(separeted by a comma ',')");
@@ -227,7 +227,7 @@ public Action Command_ResMenu(int client, int args)
 			CReplyToCommand(client, "%t", "Reseted_Usage_Of", target_list[i]);
 		}
 		
-		Vip_ResetItems(target_list[i]);
+		HexVips_ResetItems(target_list[i]);
 		
 	}
 	return Plugin_Handled;
@@ -245,9 +245,9 @@ public Action Command_VipMenu(int client, int args)
 		ReplyToCommand(client, "[SM] This command in in-game only!");
 		return Plugin_Handled;
 	}
-	if (!Vip_IsClientVip(client))
+	if (!HexVips_IsClientVip(client))
 	{
-		CReplyToCommand(client, "%t %t", "Prefix", "Not_Vip");
+		CReplyToCommand(client, "%t %t", "Prefix", "Not_VIP");
 		return Plugin_Handled;
 	}
 	if (!cv_bEnableVipMenu.BoolValue)
@@ -570,8 +570,8 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 			if (GivePlayerItem(client, sWeapon) == -1)
 			{
 				iMenuUse[client]--;				
-				PrintToChat(client, "[SM]Error occured while giving the weapons, contact an administrator please. Error: Invalid Item name/id");
-				ThrowError("[VIPBONUS] Error occured while giving %s to %n, INVALID ITEM ID/NAME", sWeapon, client);
+				PrintToChat(client, "Error: Invalid Item name/id");
+				LogError("Error occured while giving %s to %n, INVALID ITEM ID/NAME", sWeapon, client);
 			}
 			else
 			{
@@ -597,10 +597,6 @@ public int hMenu(Handle menu, MenuAction action, int client, int param2) //MENU 
 			GivePlayerItem(client, "item_heavyassaultsuit");
 			SetEntProp(client, Prop_Send, "m_bHasHelmet", 1);
 			CPrintToChat(client, "%t %t", "Prefix", "Get_Heavy");
-		}
-		else
-		{
-			PrintToChat(client, "[SM] There was an errror, contanct an administrator please!");
 		}
 	}
 	else if (action == MenuAction_End)

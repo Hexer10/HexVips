@@ -1,11 +1,11 @@
 /*
- * VipMenu-Bonuses - API (Include) Plugin.
+ * HexVips - API (Include) Plugin.
  * by: Hexer10
- * https://github.com/Hexer10/VipMenu-Bonuses
+ * https://github.com/Hexer10/HexVips
  * 
- * Copyright (C) 2016-2017 Mattia (Hexer10 | Hexah | Papero)
+ * Copyright (C) 2016-2018 Mattia (Hexer10 | Hexah | Papero)
  *
- * This file is part of the VipMenu-Bonuses SourceMod Plugin.
+ * This file is part of the HexVips SourceMod Plugin.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License, version 3.0, as published by the
@@ -25,6 +25,11 @@
 #endif
 #define _vipbonus_included_
 
+#pragma deprecated Use HexVips_IsClientVip instead.
+native bool Vip_IsClientVip(int client);
+
+#pragma deprecated Use HexVips_ResetItems instead.
+native void Vip_ResetItems(int client);
 
 /**
  * Return if a certain player is VIP or not
@@ -32,14 +37,14 @@
  *
  * @return 				True if a client has VipAccess, false otherwise.
  */
-native bool Vip_IsClientVip(int client);
+native bool HexVips_IsClientVip(int client);
 
 /**
  * Reset all the VipMenu Items of a certain player 
  * @param client		Client Index.
  * @noreturn
  */
-native void Vip_ResetItems(int client);
+native void HexVips_ResetItems(int client);
 
 /**
  * Sets a client's VIP Status
@@ -47,14 +52,14 @@ native void Vip_ResetItems(int client);
  * @param status		True to make player VIP, false otherwise.
  * @noreturn
  */
-native void Vip_SetVipStatus(int client, bool status);
+native void HexVips_SetVipStatus(int client, bool status);
 
 /**
- * Called when the VipBonuses are assigned to a client.
+ * Called when the Vips are assigned to a client.
  * @param client		Client Index.
  * @return 				Plugin_Handled to block or Plugin_Continue to allow.
  */
-forward Action Vip_OnBonusSet(int client);
+forward Action HexVips_OnBonusSet(int client);
 
 /**
  * Called when a VipStatus is updated.
@@ -62,7 +67,7 @@ forward Action Vip_OnBonusSet(int client);
  * @param status		True if the client is VIP, false otherwise.
  * @noreturn
  */
-forward void Vip_VipStatusUpdated(int client, bool status);
+forward void HexVips_VipStatusUpdated(int client, bool status);
 
 /**
  * Called when a client uses the VipMenu
@@ -70,13 +75,13 @@ forward void Vip_VipStatusUpdated(int client, bool status);
  * @param item			Item Used
  * @noreturn
  */
-forward void Vip_OnPlayerUseMenu(int client, const char[] item);
+forward void HexVips_OnPlayerUseMenu(int client, const char[] item);
 
 
-public SharedPlugin __pl_vipbonus =
+public SharedPlugin __pl_hexvips =
 {
-	name = "VipBonus",
-	file = "VipBonus.smx",
+	name = "hexvips",
+	file = "hexvips.smx",
 	
 	#if defined REQUIRE_PLUGIN
 	required = 1,
@@ -84,3 +89,15 @@ public SharedPlugin __pl_vipbonus =
 	required = 0,
 	#endif
 };
+
+#if !defined REQUIRE_PLUGIN
+public void __pl_hexvips_SetNTVOptional()
+{
+	MarkNativeAsOptional("Vip_IsClientVip");
+	MarkNativeAsOptional("Vip_ResetItems");
+	MarkNativeAsOptional("HexVips_IsClientVip");
+	MarkNativeAsOptional("HexVips_ResetItems");
+	MarkNativeAsOptional("HexVips_SetVipStatus");
+	
+}
+#endif

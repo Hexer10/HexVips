@@ -1,11 +1,11 @@
 /*
- * VipMenu-Bonuses - VipBonus(Core) Plugin.
+ * HecVips - HexVips(Core) Plugin.
  * by: Hexer10
- * https://github.com/Hexer10/VipMenu-Bonuses
+ * https://github.com/Hexer10/HexVips
  * 
- * Copyright (C) 2016-2017 Mattia (Hexer10 | Hexah | Papero)
+ * Copyright (C) 2016-2018 Mattia (Hexer10 | Hexah | Papero)
  *
- * This file is part of the VipMenu-Bonuses SourceMod Plugin.
+ * This file is part of the HexVips SourceMod Plugin.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License, version 3.0, as published by the
@@ -29,7 +29,7 @@
 #include <autoexecconfig>
 #include <hexstocks>
 #include <colors>
-#include <vipbonus>
+#include <hexvips>
 
 
 #undef REQUIRE_PLUGIN
@@ -106,11 +106,11 @@ ConVar cv_sDamageBoost;
 //Plugin info
 public Plugin myinfo = 
 {
-	name = "VipBonus", 
+	name = "HexVips", 
 	author = PLUGIN_AUTHOR, 
 	description = "Provide bonuses and VipMenu to VIPs", 
 	version = PLUGIN_VERSION, 
-	url = "https://github.com/Hexer10/VipMenu-Bonuses"
+	url = "https://github.com/Hexer10/VipMenu-HexVips"
 };
 
 /********************************************************************************************************************************
@@ -121,16 +121,21 @@ public Plugin myinfo =
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int max_err)
 {
-	RegPluginLibrary("VipBonus");
+	RegPluginLibrary("VipBonus"); //Leave for retro compatibility
+	RegPluginLibrary("hexvips");
+	
 	
 	CreateNative("Vip_IsClientVip", Native_CheckVip);
 	CreateNative("Vip_SetVipStatus", Native_SetVip);
+	
+	CreateNative("HexVips_IsClientVip", Native_CheckVip);
+	CreateNative("HexVips_SetVipStatus", Native_SetVip);
 
-	fOnVipBonusAdded = CreateGlobalForward("Vip_OnBonusSet", ET_Event, Param_Cell);
-	fOnVipStatusUpdate = CreateGlobalForward("Vip_VipStatusUpdated", ET_Ignore, Param_Cell, Param_Cell);
+	fOnVipBonusAdded = CreateGlobalForward("HexVips_OnBonusSet", ET_Event, Param_Cell);
+	fOnVipStatusUpdate = CreateGlobalForward("HexVips_VipStatusUpdated", ET_Ignore, Param_Cell, Param_Cell);
 	
 	#if (VIPMENU != 0)
-	fOnPlayerUseMenu = CreateGlobalForward("Vip_OnPlayerUseMenu", ET_Ignore, Param_Cell, Param_String);
+	fOnPlayerUseMenu = CreateGlobalForward("HexVip_OnPlayerUseMenu", ET_Ignore, Param_Cell, Param_String);
 	Menu_AskPluginLoad2();
 	#endif
 	bLateLoad = late;
@@ -144,13 +149,13 @@ public void OnPluginStart()
 	LoadTranslations("common.phrases");
 	
 	//Convars
-	CreateConVar("vipbonus_version", PLUGIN_VERSION, "VipBonus/Menu Version", FCVAR_NOTIFY | FCVAR_DONTRECORD | FCVAR_SPONLY | FCVAR_REPLICATED);
+	CreateConVar("hexvips_version", PLUGIN_VERSION, "HexVips Version", FCVAR_NOTIFY | FCVAR_DONTRECORD | FCVAR_SPONLY | FCVAR_REPLICATED);
 	
 	
-	if (CreateDirectoryEx("cfg/VipBonus"))
-		PrintToServer("Created VipBonus cfg directory!");
+	if (CreateDirectoryEx("cfg/HexVips"))
+		PrintToServer("Created HexVips cfg directory!");
 	
-	AutoExecConfig_SetFile("VipCore", "VipBonus");
+	AutoExecConfig_SetFile("Core", "HexVips");
 	AutoExecConfig_SetCreateFile(true);
 	cv_bPluginEnable = AutoExecConfig_CreateConVar("sm_vipbonus_enable", "1", "1 - Plugin enabled. 0 - Plugin disabled", _, true, 0.0, true, 1.0);
 	cv_sFlagNeeded = AutoExecConfig_CreateConVar("vip_core_flag", "a", "Flag to have Vip access ( More flags seprated by a comma, a player need to have at least one of them to get Vip access). - none = No flag needed.");
@@ -273,7 +278,7 @@ public void OnClientDisconnect(int client)
 
 public void OnRebuildAdminCache(AdminCachePart part)
 {
-	for (int i = 1; i <= MaxClients; i++)if (IsClientAuthorized(i))
+	for (int i = 1; i <= MaxClients; i++)if (IsClientInGame(i) && IsClientAuthorized(i))
 	{
 		if (cv_bRootAlways.BoolValue)
 		{
@@ -315,7 +320,7 @@ public void Event_CheckTag(Event event, const char[] name, bool dontBroadcast)
 {
 	if (!cv_bPluginEnable.BoolValue)
 		return;
-	for (int i = 1; i <= MaxClients; i++)if (IsClientInGame(i) && Vip_IsClientVip(i))
+	for (int i = 1; i <= MaxClients; i++)if (IsClientInGame(i) && HexVips_IsClientVip(i))
 	{
 		CreateTimer(1.0, DelayCheck, i);
 	}
@@ -330,14 +335,14 @@ public void Event_CheckTag(Event event, const char[] name, bool dontBroadcast)
 
 
 
-public void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast) //VIP BONUSES ON SPAWN & RESET VIP BOOLS (MENU USES)
+public void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast) //Apply Bonuses on spawn
 {
 	if (!cv_bPluginEnable.BoolValue)
 		return;
 	
 	int client = GetClientOfUserId(event.GetInt("userid"));
 	
-	if (!Vip_IsClientVip(client))
+	if (!HexVips_IsClientVip(client))
 		return;
 	
 	OnBonusSet(client);
@@ -378,13 +383,13 @@ public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
 		if (bIsLR)
 		return;
 	
-	if (Vip_IsClientVip(attacker) && cv_iVipKillHp.IntValue >= 1 && headshot)
+	if (HexVips_IsClientVip(attacker) && cv_iVipKillHp.IntValue >= 1 && headshot)
 	{
 		int iHealth = GetClientHealth(attacker);
 		SetEntityHealth(attacker, cv_iVipKillHpHead.IntValue + iHealth);
 		return;
 	}
-	else if (Vip_IsClientVip(attacker) && cv_iVipKillHp.IntValue >= 1 && !headshot)
+	else if (HexVips_IsClientVip(attacker) && cv_iVipKillHp.IntValue >= 1 && !headshot)
 	{
 		int iHealth = GetClientHealth(attacker);
 		SetEntityHealth(attacker, cv_iVipKillHp.IntValue + iHealth);
@@ -397,7 +402,7 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
 	if (!cv_bPluginEnable.BoolValue)
 		return Plugin_Continue;
 	
-	if (!IsValidClient(attacker, true, false) && (victim == attacker) && !Vip_IsClientVip(attacker))
+	if (!IsValidClient(attacker, true, false) && (victim == attacker) && !HexVips_IsClientVip(attacker))
 		return Plugin_Continue;
 	
 	if (bIsMYJBAvaible && cv_bDisableOnEventday.BoolValue)
@@ -450,7 +455,7 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 	if (!cv_bPluginEnable.BoolValue)
 		return Plugin_Continue;
 	
-	if (Vip_IsClientVip(victim) && (damagetype & DMG_FALL) && (cv_iNoFall.IntValue >= 1))
+	if (HexVips_IsClientVip(victim) && (damagetype & DMG_FALL) && (cv_iNoFall.IntValue >= 1))
 	{
 		if (cv_iNoFall.IntValue == 100)
 			return Plugin_Handled;
@@ -474,7 +479,7 @@ public Action OnPlayerRunCmd(int client, int &buttons) //DoubleJump & Bhop forke
 	
 	int water = GetEntProp(client, Prop_Data, "m_nWaterLevel");
 	
-	if (IsPlayerAlive(client) && cv_bAlwaysBhop.BoolValue && Vip_IsClientVip(client))
+	if (IsPlayerAlive(client) && cv_bAlwaysBhop.BoolValue && HexVips_IsClientVip(client))
 	{
 		if (buttons & IN_JUMP)
 		{
@@ -562,7 +567,7 @@ Action OnBonusSet(int client)
 	}
 	
 	#if (VIPMENU != 0)
-	Vip_ResetItems(client);
+	HexVips_ResetItems(client);
 	#endif
 	
 	if (bIsMYJBAvaible && cv_bDisableOnEventday.BoolValue)

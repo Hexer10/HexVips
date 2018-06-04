@@ -267,7 +267,7 @@ public void OnClientPostAdminCheck(int client)
 	{
 		char sName[32];
 		GetClientName(client, sName, sizeof(sName));
-		CPrintToChatAll("%t", "Vip_Joined", sName);
+		CPrintToChatAll("%t", "VipJoined", sName);
 	}
 }
 
@@ -588,7 +588,7 @@ void OnBonusSet(int client)
 		CreateTimer(3.7, tDelayLife, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE); //Delayed timer so this wont be overridden by other plugins
 	}
 	
-	if (cv_bVipDefuser.BoolValue)
+	if (cv_bVipDefuser.BoolValue && GetClientTeam(client) == CS_TEAM_CT)
 	{
 		GivePlayerItem(client, "item_defuser");
 	}

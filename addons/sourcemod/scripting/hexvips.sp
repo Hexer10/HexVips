@@ -249,11 +249,8 @@ public void OnClientPostAdminCheck(int client)
 	char sFlagNeeded[16];
 	cv_sFlagNeeded.GetString(sFlagNeeded, sizeof(sFlagNeeded));
 
-	if (cv_bRootAlways.BoolValue)
-	{
-		bVip[client] = CheckAdminFlag(client, sFlagNeeded);
-	}
-	bVip[client] = CheckAdminFlagEx(client, sFlagNeeded);
+	bVip[client] = cv_bRootAlways.BoolValue ? CheckAdminFlag(client, sFlagNeeded) : CheckAdminFlagEx(client, sFlagNeeded);
+	
 	Call_StartForward(fOnVipStatusUpdate);
 	Call_PushCell(client);
 	Call_PushCell(bVip[client]);

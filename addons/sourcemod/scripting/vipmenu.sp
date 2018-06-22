@@ -620,7 +620,7 @@ public void Menu_PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 	}
 		
 	for (int i = 0; i < sizeof(bUsed[]); i++)
-		bUsed[i][client] = false;
+		bUsed[client][i] = false;
 		
 	iMenuUse[client] = 0;
 	bRegen[client] = false;

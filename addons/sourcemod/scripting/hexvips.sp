@@ -403,7 +403,7 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
 	if (!cv_bPluginEnable.BoolValue)
 		return Plugin_Continue;
 	
-	if (!IsValidClient(attacker, true, false) && (victim == attacker) && !HexVips_IsClientVip(attacker))
+	if (!IsValidClient(attacker, true, false) || (victim == attacker) || !HexVips_IsClientVip(attacker))
 		return Plugin_Continue;
 	
 	if (bIsMYJBAvaible && cv_bDisableOnEventday.BoolValue)

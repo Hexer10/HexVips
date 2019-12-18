@@ -1,0 +1,191 @@
+"Phrases"
+{
+    "Prefix"
+    {
+        "pt" "[VipMenu]"
+    }
+    
+    "Menu_Title"
+    {
+        "pt" ".::VipMenu::."
+    }
+    
+    "Plugin_disable"
+    {
+        "pt" "VipMenu desativado"
+    }
+
+    "Player_Death"
+    {
+        "pt" "Você não pode fazer isso morto"
+    }
+    
+    "Wrong_team"
+    {
+        "pt" "Você está no time errado"
+    }
+
+    "Not_VIP"
+    {
+        "pt" "Você precisa ser VIP"
+    }
+    
+    "Menu_Already"
+    {
+        "pt" "Você já usou o menu"
+    }
+    
+    "Menu_opened"
+    {
+        "pt" "Você abriu o menu"
+    }
+    
+    "Menu_Life"
+    {
+        "pt" "Ganhe +HP"
+    }
+    
+    "Get_Life"
+    {
+        "pt" "Você tem mais HP!"
+    }
+    
+    "Menu_Armour"
+    {
+        "pt" "Ganhe +Armour"
+    }
+    
+    "Get_Armour"
+    {
+        "pt" "Você tem mais Armour!"
+    }
+    
+    "Menu_Granade"
+    {
+        "pt" "Ganhe HE Granada"
+    }
+    
+    "Get_Nade"
+    {
+        "pt" "Você recebeu uma HE Granada"
+    }
+    
+    "Menu_Smoke"
+    {
+        "pt" "Ganhe Smoke"
+    }
+    
+    "Get_Smoke"
+    {
+        "pt" "Você recebeu uma Smoke"
+    }
+    
+    "Menu_Speed"
+    {
+        "pt" "Ganhe +Speed"
+    }
+    
+    "Get_Speed"
+    {
+        "pt" "Você tem +Speed"
+    }
+    
+    "Menu_Gravity"
+    {
+        "pt" "Ganhe -Gravity"
+    }
+    
+    "Get_Gravity"
+    {
+        "pt" "Você tem -Gravity"
+    }
+    
+    "Menu_Regen"
+    {
+        "pt" "Ganhe Regeneration"
+    }
+    
+    "Get_Regen"
+    {
+        "pt" "Você tem Regeneration"
+    }
+    
+    "Menu_Bhop"
+    {
+        "pt" "Ganhe BunnyHop"
+    }
+    
+    "Get_Bhop"
+    {
+        "pt" "Você tem Auto-BunnyHop"
+    }
+    
+    "Menu_DoubleJump"
+    {
+      "pt" "Ganhe DoubleJump"
+    }
+    
+    "Get_DoubleJump"
+    {
+      "pt" "Você tem DoubleJump"
+    }
+    "Menu_Weapon"
+    {
+        "pt" "Ganhe Weapon"
+    }
+    
+    "Get_Weapon"
+    {
+        "pt" "Você tem a Weapon"
+    }
+    
+	"Menu_NadeKit"
+	{
+        "pt" "Custom Nade"
+	}
+   
+	"Get_NadeKit"
+    {
+        "pt" "Você tem algumas Nades"
+    }
+	
+	"Menu_Respawn"
+	{
+		"pt" "Respawn"
+	}
+	
+	"Get_Respawn"
+	{
+		"pt" "Você tem um Respawn!"
+	}
+	
+	"Menu_Heavy"
+	{
+		"pt" "Heavy Armor"
+	}
+	
+	"Get_Heavy"
+	{
+		"pt" "Você tem a Armadura Pesada"
+	}
+	
+	"Can_Respawn"
+	{
+		"pt" "Agora você pode usar o respawn. Abra o VipMenu!"
+	}
+	
+	"MyJBEvent_Running"
+	{
+		"pt" "Você não pode usar o VipMenu durante um dia de evento!"
+	}
+	
+	"HostiesLR_Active"
+	{
+		"pt" "Você não pode usar o VipMenu durante o LR!"
+	}
+	
+	"VipJoined"
+	{
+		"pt" "{green}VIP {darkred}%1 {green}juntou-se ao servidor!"
+	}
+}

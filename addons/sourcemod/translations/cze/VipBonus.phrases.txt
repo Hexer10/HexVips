@@ -1,0 +1,147 @@
+"Phrases"
+{
+    "Prefix"
+    {
+        "cze" "[VipMenu]"
+    }
+    
+    "Menu_Title"
+    {
+        "cze" ".::VipMenu::."
+    }
+    
+    "Plugin_disable"
+    {
+        "cze" "VipMenu je deaktivovane"
+    }
+
+    "Player_Death"
+    {
+        "cze" "Pozadovanou akci nemuzou delat mrtvi hraci"
+    }
+    
+    "Wrong_team"
+    {
+        "cze" "Jste ve spatnem tymu"
+    }
+
+    "Not_VIP"
+    {
+        "cze" "K teto akci musis byt VIP"
+    }
+    
+    "Menu_Already"
+    {
+        "cze" "Nabidku mate jiz otevrenou"
+    }
+    
+    "Menu_Title"
+    {
+        "cze" ".::VipMenu::."
+    }
+    
+    "Menu_opened"
+    {
+        "cze" "Otevreli jste menu"
+    }
+    
+    "Menu_Life"
+    {
+        "cze" "Ziskat +HP"
+    }
+    
+    "Get_Life"
+    {
+        "cze" "Dostali jste vice zivota!"
+    }
+    
+    "Menu_Armour"
+    {
+        "cze" "Ziskat +Armour"
+    }
+    
+    "Get_Armour"
+    {
+        "cze" "Dostali jste vice brneni!"
+    }
+    
+    "Menu_Granade"
+    {
+        "cze" "Ziskat granat"
+    }
+    
+    "Get_Nade"
+    {
+        "cze" "Dostali jste granat"
+    }
+    
+    "Menu_Smoke"
+    {
+        "cze" "Ziskat kourovy granat"
+    }
+    
+    "Get_Smoke"
+    {
+        "cze" "Dostali jste kourovy granat"
+    }
+    
+    "Menu_Speed"
+    {
+        "cze" "Nastavit +Speed"
+    }
+    
+    "Get_Speed"
+    {
+        "cze" "Nyni mate vetsi rychlost"
+    }
+    
+    "Menu_Gravity"
+    {
+        "cze" "Nastavit -Gravity"
+    }
+    
+    "Get_Gravity"
+    {
+        "cze" Nyni mate mensi gravitaci"
+    }
+    
+    "Menu_Regen"
+    {
+        "cze" "Ziskat regeneraci"
+    }
+    
+    "Get_Regen"
+    {
+        "cze" "Obdrzeli jste regeneraci"
+    }
+    
+    "Menu_Bhop"
+    {
+        "cze" "Nastavit BunnyHop"
+    }
+    
+    "Get_Bhop"
+    {
+        "cze" "Nastavili jste Auto-BunnyHop"
+    }
+    
+    "Menu_DoubleJump"
+    {
+      "cze" "Ziskat DoubleJump"
+    }
+    
+    "Get_DoubleJump"
+    {
+      "cze" "Dostali jste DoubleJump"
+    }
+    "Menu_Weapon"
+    {
+        "cze" "Ziskat zbran"
+    }
+    
+    "Get_Weapon"
+    {
+        "cze" "Dostali jste zbran"
+    }
+    
+}

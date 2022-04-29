@@ -1,0 +1,192 @@
+"Phrases"
+{
+    "Prefix"
+    {
+        "chi" "[VipMenu]"
+    }
+    
+    "Menu_Title"
+    {
+        "chi" ".::VipMenu::."
+    }
+    
+    "Plugin_disable"
+    {
+        "chi" "VipMenu 已关闭"
+    }
+
+    "Player_Death"
+    {
+        "chi" "你在死亡状态下无法执行此命令"
+    }
+    
+    "Wrong_team"
+    {
+        "chi" "你在错误的阵营"
+    }
+
+    "Not_VIP"
+    {
+        "chi" "你不是 VIP"
+    }
+    
+    "Menu_Already"
+    {
+        "chi" "你已经在使用菜单"
+    }
+    
+    "Menu_opened"
+    {
+        "chi" "你已打开菜单"
+    }
+    
+    "Menu_Life"
+    {
+        "chi" "获取 +HP"
+    }
+    
+    "Get_Life"
+    {
+        "chi" "你已获取更多的 HP!"
+    }
+    
+    "Menu_Armour"
+    {
+        "chi" "获取 +护甲"
+    }
+    
+    "Get_Armour"
+    {
+        "chi" "你已获取更多的护甲值!"
+    }
+    
+    "Menu_Granade"
+    {
+        "chi" "获取一个高爆手雷"
+    }
+    
+    "Get_Nade"
+    {
+        "chi" "你已获取一个高爆手雷"
+    }
+    
+    "Menu_Smoke"
+    {
+        "chi" "获取一个烟雾弹"
+    }
+    
+    "Get_Smoke"
+    {
+        "chi" "你已获取一个烟雾弹"
+    }
+    
+    "Menu_Speed"
+    {
+        "chi" "获取 +移动速度"
+    }
+    
+    "Get_Speed"
+    {
+        "chi" "你已获取 +移动速度"
+    }
+    
+    "Menu_Gravity"
+    {
+        "chi" "获取 -重力"
+    }
+    
+    "Get_Gravity"
+    {
+        "chi" "你已获取 -重力"
+    }
+    
+    "Menu_Regen"
+    {
+        "chi" "获取重生"
+    }
+    
+    "Get_Regen"
+    {
+        "chi" "你已重生"
+    }
+    
+    "Menu_Bhop"
+    {
+        "chi" "获取连跳"
+    }
+    
+    "Get_Bhop"
+    {
+        "chi" "你经获取自动连跳"
+    }
+    
+    "Menu_DoubleJump"
+    {
+      "chi" "获取二段跳"
+    }
+    
+    "Get_DoubleJump"
+    {
+      "chi" "你已获取二段跳"
+    }
+    "Menu_Weapon"
+    {
+        "chi" "获取武器"
+    }
+    
+    "Get_Weapon"
+    {
+        "chi" "你已获取武器"
+    }
+    
+	"Menu_NadeKit"
+	{
+        "chi" "自定义投掷物"
+	}
+   
+	"Get_NadeKit"
+    {
+        "chi" "你已获取投掷物"
+    }
+	
+	"Menu_Respawn"
+	{
+		"chi" "重生"
+	}
+	
+	"Get_Respawn"
+	{
+		"chi" "你已重生!"
+	}
+	
+	"Menu_Heavy"
+	{
+		"chi" "重装盔甲"
+	}
+	
+	"Get_Heavy"
+	{
+		"chi" "你已获取重装盔甲"
+	}
+	
+	"Can_Respawn"
+	{
+		"chi" "你现在可以重生, 请打开VipMenu!"
+	}
+	
+	"MyJBEvent_Running"
+	{
+		"chi" "你无法在活动期间使用 VipMenu!"
+	}
+	
+	"HostiesLR_Active"
+	{
+		"chi" "你无法在LR期间使用 VipMenu!"
+	}
+	
+	"VipJoined"
+	{
+		"#format" "{1:s}"
+		"chi" "VIP %1 已加入游戏!"
+	}
+}
